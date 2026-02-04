@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout - LIFESTYLE MART{% endblock %}
+
+{% block content %}
+<section class="py-4">
+    <div class="container">
+        <h1 class="mb-4">Checkout</h1>
+        
+        <div class="row">
+            <!-- Checkout Form -->
+            <div class="col-lg-8">
+                <form method="POST">
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">Shipping Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="fullName" class="form-label">Full Name</label>
+                                    <input type="text" class="form-control" id="fullName" name="fullName" 
+                                           value="{{ current_user.name }}" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="phone" class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" id="phone" name="phone" 
+                                           value="{{ current_user.phone or '' }}" required>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ current_user.email }}" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="shipping_address" class="form-label">Shipping Address</label>
+                                <textarea class="form-control" id="shipping_address" name="shipping_address" 
+                                          rows="3" required>{{ current_user.address or '' }}</textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="sameAsBilling" checked>
+                                    <label class="form-check-label" for="sameAsBilling">
+                                        Billing address same as shipping
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div id="billingAddress" style="display: none;">
+                                <div class="mb-3">
+                                    <label for="billing_address" class="form-label">Billing Address</label>
+                                    <textarea class="form-control" id="billing_address" name="billing_address" 
+                                              rows="3">{{ current_user.address or '' }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">Payment Method</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="payment_method" 
+                                       id="cod" value="cod" checked>
+                                <label class="form-check-label" for="cod">
+                                    <i class="fas fa-money-bill-wave me-2"></i>Cash on Delivery
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="payment_method" 
+                                       id="bkash" value="bkash">
+                                <label class="form-check-label" for="bkash">
+                                    <i class="fas fa-mobile-alt me-2"></i>bKash
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="payment_method" 
+                                       id="nagad" value="nagad">
+                                <label class="form-check-label" for="nagad">
+                                    <i class="fas fa-mobile-alt me-2"></i>Nagad
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="payment_method" 
+                                       id="card" value="card">
+                                <label class="form-check-label" for="card">
+                                    <i class="fas fa-credit-card me-2"></i>Credit/Debit Card
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">Order Notes (Optional)</h5>
+                        </div>
+                        <div class="card-body">
+                            <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                      placeholder="Any special instructions for your order..."></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Order Summary -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm sticky-top" style="top: 120px;">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Order Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal</span>
+                            <span>৳{{ "%.2f"|format(total) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Shipping</span>
+                            <span>৳50.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Tax</span>
+                            <span>৳{{ "%.2f"|format(total * 0.15) }}</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between fw-bold mb-3">
+                            <span>Total</span>
+                            <span class="text-warning">৳{{ "%.2f"|format(total + 50 + (total * 0.15)) }}</span>
+                        </div>
+                        
+                        <button type="submit" form="checkoutForm" class="btn btn-warning btn-lg w-100">
+                            <i class="fas fa-lock me-2"></i>Place Order
+                        </button>
+                        
+                        <div class="text-center mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-shield-alt me-1"></i>
+                                Secure checkout powered by SSL encryption
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('sameAsBilling').addEventListener('change', function() {
+    const billingAddress = document.getElementById('billingAddress');
+    billingAddress.style.display = this.checked ? 'none' : 'block';
+});
+
+document.querySelector('form').addEventListener('submit', function(e) {
+    if (!document.getElementById('sameAsBilling').checked) {
+        const billingAddress = document.getElementById('billing_address').value;
+        if (!billingAddress.trim()) {
+            e.preventDefault();
+            alert('Please enter billing address or check "Billing address same as shipping"');
+        }
+    }
+});
+</script>
+{% endblock %}
