@@ -1,599 +1,397 @@
 {% extends "base.html" %}
 
+{% block title %}LIFESTYLE MART - Bangladesh's Premier Online Shopping{% endblock %}
+
 {% block content %}
 <style>
-/* Hero Section Styles */
-.hero-section {
-    position: relative;
-    overflow: hidden;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.hero-carousel {
-    position: relative;
-    height: 500px;
-}
-
-.hero-slide {
-    height: 500px;
-    display: flex;
-    align-items: center;
-    background: linear-gradient(135deg, rgba(245, 114, 36, 0.9), rgba(255, 153, 0, 0.9)),
-                url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80');
-    background-size: cover;
-    background-position: center;
+/* Daraz-style Homepage */
+.daraz-hero {
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    padding: 60px 0;
+    text-align: center;
     color: white;
 }
 
-.hero-content h1 {
-    font-size: 3.5rem;
-    font-weight: 800;
-    margin-bottom: 1.5rem;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+.daraz-hero h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
 }
 
-.hero-content .lead {
-    font-size: 1.5rem;
+.daraz-hero .lead {
+    font-size: 1.25rem;
     margin-bottom: 2rem;
-    opacity: 0.95;
 }
 
-.btn-hero {
-    background: var(--accent-color);
-    color: white;
-    padding: 15px 40px;
-    font-size: 1.1rem;
-    font-weight: 600;
+.daraz-btn {
+    padding: 12px 30px;
     border: none;
-    border-radius: 50px;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
     transition: all 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    cursor: pointer;
+    display: inline-block;
+    margin: 5px;
 }
 
-.btn-hero:hover {
-    background: var(--primary-color);
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+.daraz-btn-primary {
+    background: #ff6b35;
     color: white;
 }
 
-/* Brand Banner */
-.brand-banner {
+.daraz-btn-outline {
+    background: transparent;
+    color: white;
+    border: 2px solid white;
+}
+
+.daraz-section {
     background: white;
     padding: 40px 0;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.brand-banner h3 {
-    color: var(--text-dark);
-    font-weight: 700;
     margin-bottom: 30px;
-    text-align: center;
 }
 
-.brands-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 30px;
+.daraz-section-header {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
+    margin-bottom: 20px;
+    padding: 0 20px;
 }
 
-.brand-item {
-    text-align: center;
-    padding: 20px;
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    background: white;
-}
-
-.brand-item:hover {
-    border-color: var(--primary-color);
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-}
-
-.brand-item img {
-    height: 60px;
-    object-fit: contain;
-    margin-bottom: 10px;
-}
-
-.brand-item h6 {
-    color: var(--text-dark);
-    font-weight: 600;
+.daraz-section-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
     margin: 0;
 }
 
-/* Category Cards */
-.category-section {
-    padding: 60px 0;
-    background: var(--bg-light);
+.daraz-view-all {
+    color: #ff6b35;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.875rem;
 }
 
-.section-title {
-    text-align: center;
-    margin-bottom: 50px;
+.daraz-flash-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 0 20px;
 }
 
-.section-title h2 {
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: var(--text-dark);
-    margin-bottom: 15px;
-}
-
-.section-title p {
-    font-size: 1.1rem;
-    color: var(--text-light);
-}
-
-.category-card {
+.daraz-flash-card {
     background: white;
-    border-radius: 12px;
+    border: 1px solid #f0f0f0;
+    border-radius: 8px;
     overflow: hidden;
-    transition: all 0.3s ease;
-    border: 1px solid var(--border-color);
-    height: 100%;
+    transition: transform 0.3s ease;
+    text-align: center;
+    padding: 15px;
 }
 
-.category-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-    border-color: var(--primary-color);
+.daraz-flash-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
-.category-image {
-    height: 200px;
-    background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 3rem;
+.daraz-flash-card img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-bottom: 10px;
 }
 
-.category-body {
+.daraz-original-price {
+    text-decoration: line-through;
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.daraz-discount-price {
+    color: #dc3545;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.daraz-categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+    padding: 0 20px;
+}
+
+.daraz-category-card {
+    background: white;
+    border: 1px solid #f0f0f0;
+    border-radius: 8px;
     padding: 20px;
     text-align: center;
-}
-
-.category-body h5 {
-    font-weight: 700;
-    margin-bottom: 10px;
-    color: var(--text-dark);
-}
-
-.category-body p {
-    color: var(--text-light);
-    margin-bottom: 15px;
-    font-size: 0.9rem;
-}
-
-/* Product Cards */
-.products-section {
-    padding: 60px 0;
-    background: white;
-}
-
-.product-card {
-    border: none;
-    border-radius: 12px;
-    overflow: hidden;
     transition: all 0.3s ease;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-    height: 100%;
+    text-decoration: none;
+    color: inherit;
 }
 
-.product-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+.daraz-category-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
-.product-image {
-    height: 250px;
-    overflow: hidden;
-    position: relative;
-}
-
-.product-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-}
-
-.product-card:hover .product-image img {
-    transform: scale(1.1);
-}
-
-.discount-badge {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    background: var(--danger-color);
-    color: white;
-    padding: 5px 10px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
-}
-
-.product-actions {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.product-card:hover .product-actions {
-    opacity: 1;
-}
-
-.action-btn {
-    background: white;
-    border: none;
-    width: 35px;
-    height: 35px;
+.daraz-category-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    margin: 0 auto 15px;
+    font-size: 1.5rem;
+    color: #6c757d;
+}
+
+.daraz-products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    padding: 0 20px;
+}
+
+.daraz-product-card {
+    background: white;
+    border: 1px solid #f0f0f0;
+    border-radius: 8px;
+    overflow: hidden;
     transition: all 0.3s ease;
 }
 
-.action-btn:hover {
-    background: var(--primary-color);
-    color: white;
+.daraz-product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
-.product-body {
-    padding: 20px;
+.daraz-product-image img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
 }
 
-.product-title {
-    font-size: 1rem;
+.daraz-product-info {
+    padding: 15px;
+}
+
+.daraz-product-title {
+    font-size: 0.875rem;
     font-weight: 600;
-    margin-bottom: 10px;
-    color: var(--text-dark);
+    margin: 0 0 5px 0;
+    color: #333;
+    overflow: hidden;
+    text-overflow: ellipsis;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
-    overflow: hidden;
 }
 
-.product-price {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-
-.current-price {
+.daraz-product-price {
     font-size: 1.25rem;
     font-weight: 700;
-    color: var(--primary-color);
+    color: #ff6b35;
 }
 
-.original-price {
-    font-size: 1rem;
-    color: var(--text-light);
-    text-decoration: line-through;
-}
-
-.product-rating {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    margin-bottom: 15px;
-}
-
-.stars {
+.daraz-stars {
     color: #ffc107;
+    font-size: 0.875rem;
 }
 
-.rating-count {
-    color: var(--text-light);
-    font-size: 0.9rem;
-}
-
-.add-to-cart {
-    background: var(--primary-color);
+.daraz-btn-cart {
+    background: #ff6b35;
     color: white;
     border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 0.875rem;
     font-weight: 600;
-    transition: all 0.3s ease;
+    cursor: pointer;
     width: 100%;
-}
-
-.add-to-cart:hover {
-    background: var(--accent-color);
-    transform: translateY(-2px);
-}
-
-/* Flash Deals Timer */
-.flash-deals {
-    background: linear-gradient(135deg, #ff6b35, #f7931e);
-    color: white;
-    padding: 40px 0;
-    margin: 60px 0;
-}
-
-.timer {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    margin: 30px 0;
-}
-
-.time-unit {
-    background: rgba(255,255,255,0.2);
-    padding: 15px 20px;
-    border-radius: 8px;
-    text-align: center;
-    min-width: 80px;
-}
-
-.time-value {
-    font-size: 2rem;
-    font-weight: 700;
-    display: block;
-}
-
-.time-label {
-    font-size: 0.9rem;
-    opacity: 0.9;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .hero-content h1 {
-        font-size: 2.5rem;
-    }
-    
-    .hero-content .lead {
-        font-size: 1.2rem;
-    }
-    
-    .brands-grid {
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        gap: 15px;
-    }
-    
-    .timer {
-        gap: 10px;
-    }
-    
-    .time-unit {
-        min-width: 60px;
-        padding: 10px 15px;
-    }
-    
-    .time-value {
-        font-size: 1.5rem;
-    }
 }
 </style>
 
 <!-- Hero Section -->
-<section class="hero-section">
-    <div class="hero-carousel">
-        <div class="hero-slide">
-            <div class="container">
-                <div class="row align-items-center">
-                    <div class="col-lg-7">
-                        <div class="hero-content">
-                            <h1>🛍️ Bangladesh's Premier Shopping Destination</h1>
-                            <p class="lead">Discover amazing deals on local and international brands. Fast delivery across Bangladesh!</p>
-                            <a href="{{ url_for('shop') }}" class="btn btn-hero">
-                                <i class="fas fa-shopping-bag me-2"></i>Start Shopping
-                            </a>
-                        </div>
-                    </div>
-                    <div class="col-lg-5">
-                        <div class="hero-image">
-                            <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80" 
-                                 alt="Shopping" class="img-fluid rounded-3 shadow-lg">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Bangladeshi Brands Banner -->
-<section class="brand-banner">
+<section class="daraz-hero">
     <div class="container">
-        <h3>🏆 Trusted by Leading Bangladeshi Brands</h3>
-        <div class="brands-grid">
-            <div class="brand-item">
-                <div class="brand-image">
-                    <i class="fas fa-crown" style="font-size: 2rem; color: var(--primary-color);"></i>
-                </div>
-                <h6>Aarong</h6>
-            </div>
-            <div class="brand-item">
-                <div class="brand-image">
-                    <i class="fas fa-gem" style="font-size: 2rem; color: var(--primary-color);"></i>
-                </div>
-                <h6>Sailor</h6>
-            </div>
-            <div class="brand-item">
-                <div class="brand-image">
-                    <i class="fas fa-star" style="font-size: 2rem; color: var(--primary-color);"></i>
-                </div>
-                <h6>Apex</h6>
-            </div>
-            <div class="brand-item">
-                <div class="brand-image">
-                    <i class="fas fa-fire" style="font-size: 2rem; color: var(--primary-color);"></i>
-                </div>
-                <h6>Bata</h6>
-            </div>
-            <div class="brand-item">
-                <div class="brand-image">
-                    <i class="fas fa-bolt" style="font-size: 2rem; color: var(--primary-color);"></i>
-                </div>
-                <h6>Yellow</h6>
-            </div>
-            <div class="brand-item">
-                <div class="brand-image">
-                    <i class="fas fa-heart" style="font-size: 2rem; color: var(--primary-color);"></i>
-                </div>
-                <h6>Cat's Eye</h6>
-            </div>
-            <div class="brand-item">
-                <div class="brand-image">
-                    <i class="fas fa-leaf" style="font-size: 2rem; color: var(--primary-color);"></i>
-                </div>
-                <h6>Ecstasy</h6>
-            </div>
-            <div class="brand-item">
-                <div class="brand-image">
-                    <i class="fas fa-moon" style="font-size: 2rem; color: var(--primary-color);"></i>
-                </div>
-                <h6>Texmart</h6>
-            </div>
+        <h1>Fashion & Lifestyle</h1>
+        <p class="lead">Up to 70% off on fashion, beauty, home & more</p>
+        <div>
+            <a href="{{ url_for('shop') }}" class="daraz-btn daraz-btn-primary">Shop Now</a>
+            <a href="#categories" class="daraz-btn daraz-btn-outline">View Categories</a>
         </div>
     </div>
 </section>
 
 <!-- Flash Deals Section -->
-<section class="flash-deals">
+<section class="daraz-section">
     <div class="container">
-        <div class="text-center">
-            <h2 class="display-4 fw-bold mb-3">⚡ Flash Deals</h2>
-            <p class="lead">Limited time offers - Don't miss out!</p>
-            <div class="timer">
-                <div class="time-unit">
-                    <span class="time-value" id="hours">12</span>
-                    <span class="time-label">Hours</span>
-                </div>
-                <div class="time-unit">
-                    <span class="time-value" id="minutes">45</span>
-                    <span class="time-label">Minutes</span>
-                </div>
-                <div class="time-unit">
-                    <span class="time-value" id="seconds">30</span>
-                    <span class="time-label">Seconds</span>
-                </div>
+        <div class="daraz-section-header">
+            <h2 class="daraz-section-title">Flash Deals</h2>
+            <a href="{{ url_for('shop') }}" class="daraz-view-all">View All</a>
+        </div>
+        <div class="daraz-flash-grid">
+            <div class="daraz-flash-card">
+                <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="T-Shirt">
+                <h6>Premium Cotton T-Shirt</h6>
+                <span class="daraz-original-price">৳1,500</span>
+                <div class="daraz-discount-price">৳750</div>
+            </div>
+            <div class="daraz-flash-card">
+                <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Sneakers">
+                <h6>Red Running Shoes</h6>
+                <span class="daraz-original-price">৳4,500</span>
+                <div class="daraz-discount-price">৳2,700</div>
+            </div>
+            <div class="daraz-flash-card">
+                <img src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Handbag">
+                <h6>Designer Handbag</h6>
+                <span class="daraz-original-price">৳3,500</span>
+                <div class="daraz-discount-price">৳2,100</div>
+            </div>
+            <div class="daraz-flash-card">
+                <img src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Watch">
+                <h6>Fashion Watch</h6>
+                <span class="daraz-original-price">৳2,800</span>
+                <div class="daraz-discount-price">৳1,680</div>
             </div>
         </div>
     </div>
 </section>
 
 <!-- Categories Section -->
-<section class="category-section">
+<section class="daraz-section" id="categories">
     <div class="container">
-        <div class="section-title">
-            <h2>Shop by Category</h2>
-            <p>Explore our wide range of products</p>
+        <div class="daraz-section-header">
+            <h2 class="daraz-section-title">Shop by Category</h2>
+            <a href="{{ url_for('shop') }}" class="daraz-view-all">View All</a>
         </div>
-        <div class="row g-4">
-            {% for category in categories %}
-            <div class="col-lg-3 col-md-4 col-sm-6">
-                <div class="category-card">
-                    <div class="category-image">
-                        {% if category.name == "Men's Clothing" %}
-                            <i class="fas fa-male"></i>
-                        {% elif category.name == "Women's Clothing" %}
-                            <i class="fas fa-female"></i>
-                        {% elif category.name == "Shoes" %}
-                            <i class="fas fa-shoe-prints"></i>
-                        {% else %}
-                            <i class="fas fa-shopping-bag"></i>
-                        {% endif %}
+        <div class="daraz-categories-grid">
+            <a href="{{ url_for('shop') }}" class="daraz-category-card">
+                <div class="daraz-category-icon"><i class="fas fa-tshirt"></i></div>
+                <h6>Men's Fashion</h6>
+            </a>
+            <a href="{{ url_for('shop') }}" class="daraz-category-card">
+                <div class="daraz-category-icon"><i class="fas fa-female"></i></div>
+                <h6>Women's Fashion</h6>
+            </a>
+            <a href="{{ url_for('shop') }}" class="daraz-category-card">
+                <div class="daraz-category-icon"><i class="fas fa-shoe-prints"></i></div>
+                <h6>Shoes</h6>
+            </a>
+            <a href="{{ url_for('shop') }}" class="daraz-category-card">
+                <div class="daraz-category-icon"><i class="fas fa-shopping-bag"></i></div>
+                <h6>Accessories</h6>
+            </a>
+            <a href="{{ url_for('shop') }}" class="daraz-category-card">
+                <div class="daraz-category-icon"><i class="fas fa-spa"></i></div>
+                <h6>Beauty & Personal Care</h6>
+            </a>
+            <a href="{{ url_for('shop') }}" class="daraz-category-card">
+                <div class="daraz-category-icon"><i class="fas fa-couch"></i></div>
+                <h6>Home & Living</h6>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Products Section -->
+<section class="daraz-section">
+    <div class="container">
+        <div class="daraz-section-header">
+            <h2 class="daraz-section-title">Popular Products</h2>
+            <a href="{{ url_for('shop') }}" class="daraz-view-all">View All</a>
+        </div>
+        <div class="daraz-products-grid">
+            {% for product in products[:8] if products %}
+            <div class="daraz-product-card">
+                <div class="daraz-product-image">
+                    <img src="{{ product.image_url or 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' }}" alt="{{ product.name }}">
+                </div>
+                <div class="daraz-product-info">
+                    <h6 class="daraz-product-title">{{ product.name }}</h6>
+                    <div class="daraz-product-price">৳{{ "%.0f"|format(product.price) }}</div>
+                    <div class="daraz-stars">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>
                     </div>
-                    <div class="category-body">
-                        <h5>{{ category.name }}</h5>
-                        <p>Latest trends and styles</p>
-                        <a href="{{ url_for('shop', category=category.id) }}" class="btn btn-outline-warning btn-sm">Shop Now</a>
-                    </div>
+                    <form action="{{ url_for('add_to_cart') }}" method="POST">
+                        <input type="hidden" name="product_id" value="{{ product.id }}">
+                        <input type="hidden" name="quantity" value="1">
+                        <button type="submit" class="daraz-btn-cart">Add to Cart</button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="daraz-product-card">
+                <div class="daraz-product-image">
+                    <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="T-Shirt">
+                </div>
+                <div class="daraz-product-info">
+                    <h6 class="daraz-product-title">Premium Cotton T-Shirt</h6>
+                    <div class="daraz-product-price">৳1,200</div>
+                    <div class="daraz-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i></div>
+                    <form action="{{ url_for('add_to_cart') }}" method="POST">
+                        <input type="hidden" name="product_id" value="1">
+                        <input type="hidden" name="quantity" value="1">
+                        <button type="submit" class="daraz-btn-cart">Add to Cart</button>
+                    </form>
+                </div>
+            </div>
+            <div class="daraz-product-card">
+                <div class="daraz-product-image">
+                    <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Shoes">
+                </div>
+                <div class="daraz-product-info">
+                    <h6 class="daraz-product-title">Running Shoes</h6>
+                    <div class="daraz-product-price">৳3,500</div>
+                    <div class="daraz-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                    <form action="{{ url_for('add_to_cart') }}" method="POST">
+                        <input type="hidden" name="product_id" value="2">
+                        <input type="hidden" name="quantity" value="1">
+                        <button type="submit" class="daraz-btn-cart">Add to Cart</button>
+                    </form>
+                </div>
+            </div>
+            <div class="daraz-product-card">
+                <div class="daraz-product-image">
+                    <img src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Handbag">
+                </div>
+                <div class="daraz-product-info">
+                    <h6 class="daraz-product-title">Leather Handbag</h6>
+                    <div class="daraz-product-price">৳4,200</div>
+                    <div class="daraz-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i></div>
+                    <form action="{{ url_for('add_to_cart') }}" method="POST">
+                        <input type="hidden" name="product_id" value="3">
+                        <input type="hidden" name="quantity" value="1">
+                        <button type="submit" class="daraz-btn-cart">Add to Cart</button>
+                    </form>
+                </div>
+            </div>
+            <div class="daraz-product-card">
+                <div class="daraz-product-image">
+                    <img src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Watch">
+                </div>
+                <div class="daraz-product-info">
+                    <h6 class="daraz-product-title">Fashion Watch</h6>
+                    <div class="daraz-product-price">৳2,800</div>
+                    <div class="daraz-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                    <form action="{{ url_for('add_to_cart') }}" method="POST">
+                        <input type="hidden" name="product_id" value="4">
+                        <input type="hidden" name="quantity" value="1">
+                        <button type="submit" class="daraz-btn-cart">Add to Cart</button>
+                    </form>
                 </div>
             </div>
             {% endfor %}
         </div>
     </div>
 </section>
-
-<!-- Featured Products -->
-<section class="products-section">
-    <div class="container">
-        <div class="section-title">
-            <h2>Featured Products</h2>
-            <p>Handpicked items just for you</p>
-        </div>
-        <div class="row g-4">
-            {% for product in featured_products %}
-            <div class="col-lg-3 col-md-4 col-sm-6">
-                <div class="product-card">
-                    <div class="product-image">
-                        <img src="{{ product.image or 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1399&q=80' }}" 
-                             alt="{{ product.name }}">
-                        <div class="discount-badge">-20%</div>
-                        <div class="product-actions">
-                            <button class="action-btn">
-                                <i class="fas fa-heart"></i>
-                            </button>
-                            <button class="action-btn">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="product-body">
-                        <h6 class="product-title">{{ product.name }}</h6>
-                        <div class="product-price">
-                            <span class="current-price">৳{{ "%.2f"|format(product.price) }}</span>
-                            <span class="original-price">৳{{ "%.2f"|format(product.price * 1.25) }}</span>
-                        </div>
-                        <div class="product-rating">
-                            <div class="stars">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star-half-alt"></i>
-                            </div>
-                            <span class="rating-count">(4.5)</span>
-                        </div>
-                        <button class="add-to-cart">
-                            <i class="fas fa-shopping-cart me-2"></i>Add to Cart
-                        </button>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-</section>
-
-<script>
-// Flash Deals Timer
-function updateTimer() {
-    const now = new Date();
-    const endTime = new Date();
-    endTime.setHours(23, 59, 59);
-    
-    const diff = endTime - now;
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-    
-    document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
-    document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
-    document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
-}
-
-setInterval(updateTimer, 1000);
-updateTimer();
-</script>
 {% endblock %}

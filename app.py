@@ -7,7 +7,7 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for, f
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, TextAreaField, IntegerField, FloatField, SelectField, BooleanField
+from wtforms import StringField, PasswordField, TextAreaField, IntegerField, FloatField, SelectField, BooleanField, DateField
 from wtforms.validators import DataRequired, Email, Length, NumberRange, EqualTo
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -99,12 +99,29 @@ class Order(db.Model):
     order_number = db.Column(db.String(50), unique=True, nullable=False)
     total_amount = db.Column(db.Float, nullable=False)
     status = db.Column(db.Enum('pending', 'processing', 'shipped', 'delivered', 'cancelled'), default='pending')
-    payment_method = db.Column(db.Enum('cod', 'bkash', 'nagad', 'card'), default='cod')
+    payment_method = db.Column(db.Enum('cod', 'bkash', 'nagad', 'card', 'gift_card'), default='cod')
     payment_status = db.Column(db.Enum('pending', 'paid', 'failed'), default='pending')
     shipping_address = db.Column(db.Text, nullable=False)
     billing_address = db.Column(db.Text)
     notes = db.Column(db.Text)
+    
+    # New fields for enhanced features
+    delivery_type = db.Column(db.Enum('standard', 'express'), default='standard')
+    gift_card_code = db.Column(db.String(50))
+    gift_card_amount = db.Column(db.Float, default=0)
+    tracking_number = db.Column(db.String(100))
+    courier_name = db.Column(db.String(100))
+    estimated_delivery = db.Column(db.DateTime)
+    actual_delivery = db.Column(db.DateTime)
+    delivery_notes = db.Column(db.Text)
+    order_review = db.Column(db.Text)
+    order_rating = db.Column(db.Integer)  # 1-5 stars for overall order experience
+    is_gift = db.Column(db.Boolean, default=False)
+    gift_message = db.Column(db.Text)
+    gift_wrap = db.Column(db.Boolean, default=False)
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     order_items = db.relationship('OrderItem', backref='order', lazy=True, cascade='all, delete-orphan')
@@ -161,16 +178,45 @@ class ReviewForm(FlaskForm):
 
 class PaymentForm(FlaskForm):
     payment_method = SelectField('Payment Method',
-                                 choices=[('cod', 'Cash on Delivery'), 
-                                         ('bkash', 'bKash'), 
-                                         ('nagad', 'Nagad'), 
-                                         ('card', 'Credit/Debit Card')],
-                                 validators=[DataRequired()])
+                                choices=[('cod', 'Cash on Delivery'),
+                                        ('bkash', 'bKash'),
+                                        ('nagad', 'Nagad'),
+                                        ('card', 'Credit/Debit Card'),
+                                        ('gift_card', 'Gift Card')],
+                                validators=[DataRequired()])
     phone_number = StringField('Phone Number', validators=[DataRequired(), Length(min=11, max=11)])
     transaction_id = StringField('Transaction ID (for bKash/Nagad)')
     card_number = StringField('Card Number')
     card_expiry = StringField('Expiry Date (MM/YY)')
     card_cvv = StringField('CVV')
+    gift_card_code = StringField('Gift Card Code')
+
+class OrderTrackingForm(FlaskForm):
+    tracking_number = StringField('Tracking Number', validators=[DataRequired()])
+    courier_name = SelectField('Courier Service',
+                               choices=[('pathao', 'Pathao'),
+                                       ('redx', 'RedX'),
+                                       ('steadfast', 'Steadfast'),
+                                       ('ecourier', 'eCourier'),
+                                       ('other', 'Other')],
+                               validators=[DataRequired()])
+    estimated_delivery = DateField('Estimated Delivery', format='%Y-%m-%d')
+    delivery_notes = TextAreaField('Delivery Notes')
+
+class OrderReviewForm(FlaskForm):
+    order_rating = SelectField('Order Rating',
+                               choices=[(5, '5 Stars - Excellent'),
+                                       (4, '4 Stars - Very Good'),
+                                       (3, '3 Stars - Good'),
+                                       (2, '2 Stars - Fair'),
+                                       (1, '1 Star - Poor')],
+                               coerce=int, validators=[DataRequired()])
+    order_review = TextAreaField('Order Review', validators=[DataRequired(), Length(min=10, max=500)])
+
+class GiftCardForm(FlaskForm):
+    gift_card_code = StringField('Gift Card Code', validators=[DataRequired(), Length(min=8, max=50)])
+    gift_message = TextAreaField('Gift Message')
+    gift_wrap = BooleanField('Gift Wrapping (+৳50)')
 
 # User loader for Flask-Login
 @login_manager.user_loader
@@ -193,9 +239,9 @@ def generate_order_number():
 # Routes
 @app.route('/')
 def index():
-    featured_products = Product.query.filter_by(is_featured=True, status='active').limit(8).all()
-    categories = Category.query.limit(4).all()
-    return render_template('index.html', featured_products=featured_products, categories=categories)
+    products = Product.query.filter_by(is_featured=True, status='active').limit(8).all()
+    categories = Category.query.limit(6).all()
+    return render_template('index.html', products=products, categories=categories)
 
 @app.route('/shop')
 def shop():
@@ -455,16 +501,42 @@ def checkout():
                 flash('No valid products in cart', 'danger')
                 return redirect(url_for('cart'))
             
-            # Create order
+            # Create order with enhanced features
+            delivery_type = request.form.get('delivery_type', 'standard')
+            is_gift = request.form.get('is_gift') == 'on'
+            gift_wrap = request.form.get('gift_wrap') == 'on'
+            
+            # Calculate gift card discount
+            gift_card_amount = 0
+            if form.payment_method.data == 'gift_card' and form.gift_card_code.data:
+                # Simple gift card validation (in real app, this would check against database)
+                gift_card_amount = min(500, total_amount * 0.1)  # 10% discount up to ৳500
+            
+            # Calculate delivery cost
+            delivery_cost = 0
+            if delivery_type == 'express':
+                delivery_cost = 100  # Express delivery fee
+            elif is_gift and gift_wrap:
+                delivery_cost += 50   # Gift wrapping fee
+            
+            final_total = total_amount - gift_card_amount + delivery_cost
+            
             order = Order(
                 user_id=current_user.id,
                 order_number=order_number,
-                total_amount=total_amount,
+                total_amount=final_total,
                 shipping_address=request.form.get('shipping_address'),
                 billing_address=request.form.get('billing_address') or request.form.get('shipping_address'),
                 payment_method=form.payment_method.data,
                 payment_status='paid' if form.payment_method.data != 'cod' else 'pending',
-                notes=request.form.get('notes')
+                notes=request.form.get('notes'),
+                delivery_type=delivery_type,
+                gift_card_code=form.gift_card_code.data,
+                gift_card_amount=gift_card_amount,
+                is_gift=is_gift,
+                gift_message=request.form.get('gift_message'),
+                gift_wrap=gift_wrap,
+                estimated_delivery=datetime.utcnow + (timedelta(days=1) if delivery_type == 'express' else timedelta(days=3))
             )
             db.session.add(order)
             db.session.flush()
@@ -554,6 +626,309 @@ def admin_dashboard():
                          total_orders=total_orders,
                          total_revenue=total_revenue,
                          recent_orders=recent_orders)
+
+@app.route('/admin/products')
+@admin_required
+def admin_products():
+    page = request.args.get('page', 1, type=int)
+    search = request.args.get('search', '')
+    
+    query = Product.query
+    if search:
+        query = query.filter(Product.name.contains(search))
+    
+    products = query.order_by(Product.created_at.desc()).paginate(
+        page=page, per_page=20, error_out=False
+    )
+    
+    return render_template('admin/products.html', products=products, search=search)
+
+@app.route('/admin/products/add', methods=['GET', 'POST'])
+@admin_required
+def admin_add_product():
+    form = ProductForm()
+    form.category_id.choices = [(c.id, c.name) for c in Category.query.all()]
+    
+    if form.validate_on_submit():
+        product = Product(
+            name=form.name.data,
+            description=form.description.data,
+            category_id=form.category_id.data,
+            price=form.price.data,
+            stock=form.stock.data,
+            brand=form.brand.data,
+            image=form.image.data,
+            is_featured=form.is_featured.data
+        )
+        db.session.add(product)
+        db.session.commit()
+        
+        flash('Product added successfully!', 'success')
+        return redirect(url_for('admin_products'))
+    
+    return render_template('admin/product_form.html', form=form, title='Add Product')
+
+@app.route('/admin/products/edit/<int:id>', methods=['GET', 'POST'])
+@admin_required
+def admin_edit_product(id):
+    product = Product.query.get_or_404(id)
+    form = ProductForm(obj=product)
+    form.category_id.choices = [(c.id, c.name) for c in Category.query.all()]
+    
+    if form.validate_on_submit():
+        product.name = form.name.data
+        product.description = form.description.data
+        product.category_id = form.category_id.data
+        product.price = form.price.data
+        product.stock = form.stock.data
+        product.brand = form.brand.data
+        product.image = form.image.data
+        product.is_featured = form.is_featured.data
+        
+        db.session.commit()
+        
+        flash('Product updated successfully!', 'success')
+        return redirect(url_for('admin_products'))
+    
+    return render_template('admin/product_form.html', form=form, product=product, title='Edit Product')
+
+@app.route('/admin/products/delete/<int:id>')
+@admin_required
+def admin_delete_product(id):
+    product = Product.query.get_or_404(id)
+    db.session.delete(product)
+    db.session.commit()
+    
+    flash('Product deleted successfully!', 'success')
+    return redirect(url_for('admin_products'))
+
+@app.route('/admin/orders')
+@admin_required
+def admin_orders():
+    page = request.args.get('page', 1, type=int)
+    status = request.args.get('status', '')
+    
+    query = Order.query
+    if status:
+        query = query.filter(Order.status == status)
+    
+    orders = query.order_by(Order.created_at.desc()).paginate(
+        page=page, per_page=20, error_out=False
+    )
+    
+    return render_template('admin/orders.html', orders=orders, status=status)
+
+@app.route('/admin/orders/<int:id>')
+@admin_required
+def admin_order_detail(id):
+    order = Order.query.get_or_404(id)
+    return render_template('admin/order_detail.html', order=order)
+
+@app.route('/admin/orders/update_status/<int:id>', methods=['POST'])
+@admin_required
+def admin_update_order_status(id):
+    order = Order.query.get_or_404(id)
+    new_status = request.form.get('status')
+    
+    if new_status in ['pending', 'processing', 'shipped', 'delivered', 'cancelled']:
+        order.status = new_status
+        
+        # Set actual delivery time if delivered
+        if new_status == 'delivered':
+            order.actual_delivery = datetime.utcnow()
+        
+        db.session.commit()
+        
+        flash('Order status updated successfully!', 'success')
+    else:
+        flash('Invalid status!', 'danger')
+    
+    return redirect(url_for('admin_order_detail', id=id))
+
+@app.route('/admin/orders/<int:id>/tracking', methods=['GET', 'POST'])
+@admin_required
+def admin_order_tracking(id):
+    order = Order.query.get_or_404(id)
+    form = OrderTrackingForm(obj=order)
+    
+    if form.validate_on_submit():
+        order.tracking_number = form.tracking_number.data
+        order.courier_name = form.courier_name.data
+        order.estimated_delivery = form.estimated_delivery.data
+        order.delivery_notes = form.delivery_notes.data
+        
+        db.session.commit()
+        flash('Tracking information updated successfully!', 'success')
+        return redirect(url_for('admin_order_detail', id=id))
+    
+    return render_template('admin/order_tracking.html', order=order, form=form)
+
+@app.route('/admin/orders/<int:id>/review', methods=['GET', 'POST'])
+@admin_required
+def admin_order_review(id):
+    order = Order.query.get_or_404(id)
+    form = OrderReviewForm(obj=order)
+    
+    if form.validate_on_submit():
+        order.order_rating = form.order_rating.data
+        order.order_review = form.order_review.data
+        
+        db.session.commit()
+        flash('Order review added successfully!', 'success')
+        return redirect(url_for('admin_order_detail', id=id))
+    
+    return render_template('admin/order_review.html', order=order, form=form)
+
+@app.route('/track-order')
+def track_order():
+    tracking_number = request.args.get('tracking_number')
+    order = None
+    
+    if tracking_number:
+        order = Order.query.filter_by(tracking_number=tracking_number).first()
+    
+    return render_template('track_order.html', order=order, tracking_number=tracking_number)
+
+@app.route('/admin/users')
+@admin_required
+def admin_users():
+    page = request.args.get('page', 1, type=int)
+    search = request.args.get('search', '')
+    
+    query = User.query
+    if search:
+        query = query.filter(User.name.contains(search) | User.email.contains(search))
+    
+    users = query.order_by(User.created_at.desc()).paginate(
+        page=page, per_page=20, error_out=False
+    )
+    
+    return render_template('admin/users.html', users=users, search=search)
+
+@app.route('/admin/users/<int:id>')
+@admin_required
+def admin_user_detail(id):
+    user = User.query.get_or_404(id)
+    return render_template('admin/user_detail.html', user=user)
+
+@app.route('/admin/users/<int:id>/toggle_role', methods=['POST'])
+@admin_required
+def admin_toggle_user_role(id):
+    user = User.query.get_or_404(id)
+    
+    # Prevent changing own role
+    if user.id == current_user.id:
+        flash('You cannot change your own role!', 'danger')
+        return redirect(url_for('admin_users'))
+    
+    new_role = request.form.get('role')
+    if new_role in ['admin', 'user', 'seller']:
+        user.role = new_role
+        db.session.commit()
+        
+        flash(f'User role changed to {new_role} successfully!', 'success')
+    else:
+        flash('Invalid role!', 'danger')
+    
+    return redirect(url_for('admin_users'))
+
+@app.route('/admin/categories')
+@admin_required
+def admin_categories():
+    categories = Category.query.all()
+    return render_template('admin/categories.html', categories=categories)
+
+@app.route('/admin/categories/add', methods=['GET', 'POST'])
+@admin_required
+def admin_add_category():
+    if request.method == 'POST':
+        name = request.form.get('name')
+        description = request.form.get('description')
+        
+        if name:
+            category = Category(name=name, description=description)
+            db.session.add(category)
+            db.session.commit()
+            
+            flash('Category added successfully!', 'success')
+            return redirect(url_for('admin_categories'))
+        else:
+            flash('Category name is required!', 'danger')
+    
+    return render_template('admin/category_form.html', title='Add Category')
+
+@app.route('/admin/categories/edit/<int:id>', methods=['GET', 'POST'])
+@admin_required
+def admin_edit_category(id):
+    category = Category.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        name = request.form.get('name')
+        description = request.form.get('description')
+        
+        if name:
+            category.name = name
+            category.description = description
+            db.session.commit()
+            
+            flash('Category updated successfully!', 'success')
+            return redirect(url_for('admin_categories'))
+        else:
+            flash('Category name is required!', 'danger')
+    
+    return render_template('admin/category_form.html', category=category, title='Edit Category')
+
+@app.route('/admin/categories/delete/<int:id>')
+@admin_required
+def admin_delete_category(id):
+    category = Category.query.get_or_404(id)
+    
+    # Check if category has products
+    if category.products:
+        flash('Cannot delete category with products!', 'danger')
+        return redirect(url_for('admin_categories'))
+    
+    db.session.delete(category)
+    db.session.commit()
+    
+    flash('Category deleted successfully!', 'success')
+    return redirect(url_for('admin_categories'))
+
+@app.route('/admin/reviews')
+@admin_required
+def admin_reviews():
+    page = request.args.get('page', 1, type=int)
+    status = request.args.get('status', '')
+    
+    query = Review.query
+    if status:
+        query = query.filter(Review.status == status)
+    
+    reviews = query.order_by(Review.created_at.desc()).paginate(
+        page=page, per_page=20, error_out=False
+    )
+    
+    return render_template('admin/reviews.html', reviews=reviews, status=status)
+
+@app.route('/admin/reviews/approve/<int:id>')
+@admin_required
+def admin_approve_review(id):
+    review = Review.query.get_or_404(id)
+    review.status = 'approved'
+    db.session.commit()
+    
+    flash('Review approved successfully!', 'success')
+    return redirect(url_for('admin_reviews'))
+
+@app.route('/admin/reviews/reject/<int:id>')
+@admin_required
+def admin_reject_review(id):
+    review = Review.query.get_or_404(id)
+    review.status = 'rejected'
+    db.session.commit()
+    
+    flash('Review rejected successfully!', 'success')
+    return redirect(url_for('admin_reviews'))
 
 # Error handlers
 @app.errorhandler(404)

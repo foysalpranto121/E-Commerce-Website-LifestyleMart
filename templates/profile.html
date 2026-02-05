@@ -1,245 +1,324 @@
 {% extends "base.html" %}
 
-{% block title %}My Profile - LIFESTYLE MART{% endblock %}
+{% block title %}My Account - LIFESTYLE MART{% endblock %}
 
 {% block content %}
 <style>
-.profile-container {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-    padding: 30px;
-    margin-top: 30px;
+/* Daraz-style Profile */
+.daraz-profile-container {
+    background: #f5f5f5;
+    min-height: calc(100vh - 200px);
+    padding: 20px 0;
 }
 
-.profile-header {
-    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-    color: white;
-    padding: 30px;
-    border-radius: 12px 12px 0 0;
-    margin: -30px -30px 30px -30px;
+.daraz-profile-sidebar {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
 }
 
-.profile-avatar {
-    width: 100px;
-    height: 100px;
-    background: white;
+.daraz-profile-avatar {
+    width: 80px;
+    height: 80px;
+    background: #ff6b35;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2.5rem;
-    color: var(--primary-color);
-    margin-bottom: 20px;
-}
-
-.section-title {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: var(--text-dark);
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid var(--primary-color);
-}
-
-.form-control:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.2rem rgba(245, 114, 36, 0.25);
-}
-
-.btn-update {
-    background: var(--primary-color);
+    font-size: 2rem;
     color: white;
-    border: none;
-    padding: 12px 30px;
-    border-radius: 6px;
+    margin: 0 auto 15px;
+}
+
+.daraz-profile-name {
+    font-size: 1.1rem;
     font-weight: 600;
+    text-align: center;
+    margin-bottom: 5px;
+}
+
+.daraz-profile-email {
+    font-size: 0.875rem;
+    color: #6c757d;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.daraz-profile-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.daraz-profile-menu li {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.daraz-profile-menu li:last-child {
+    border-bottom: none;
+}
+
+.daraz-profile-menu a {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    color: #333;
+    text-decoration: none;
     transition: all 0.3s ease;
 }
 
-.btn-update:hover {
-    background: var(--accent-color);
-    transform: translateY(-2px);
+.daraz-profile-menu a:hover,
+.daraz-profile-menu a.active {
+    background: #fff5f0;
+    color: #ff6b35;
 }
 
-.order-card {
-    border: 1px solid var(--border-color);
+.daraz-profile-menu i {
+    width: 24px;
+    margin-right: 10px;
+    color: #6c757d;
+}
+
+.daraz-profile-menu a:hover i,
+.daraz-profile-menu a.active i {
+    color: #ff6b35;
+}
+
+.daraz-profile-content {
+    background: white;
+    border-radius: 8px;
+    padding: 25px;
+}
+
+.daraz-section-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #ff6b35;
+}
+
+.daraz-form-group {
+    margin-bottom: 20px;
+}
+
+.daraz-form-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.daraz-form-control {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+}
+
+.daraz-form-control:focus {
+    border-color: #ff6b35;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+.daraz-btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.daraz-btn-primary {
+    background: #ff6b35;
+    color: white;
+}
+
+.daraz-btn-primary:hover {
+    background: #e55a2b;
+}
+
+.daraz-order-card {
+    border: 1px solid #e9ecef;
     border-radius: 8px;
     padding: 20px;
     margin-bottom: 15px;
     transition: all 0.3s ease;
 }
 
-.order-card:hover {
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    border-color: var(--primary-color);
+.daraz-order-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-.order-status {
-    padding: 5px 15px;
+.daraz-order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.daraz-order-id {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.daraz-order-date {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+.daraz-order-status {
+    display: inline-block;
+    padding: 5px 12px;
     border-radius: 20px;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     font-weight: 600;
 }
 
-.status-pending {
-    background: #fff3cd;
-    color: #856404;
+.daraz-status-pending { background: #fff3cd; color: #856404; }
+.daraz-status-processing { background: #cce5ff; color: #004085; }
+.daraz-status-shipped { background: #d4edda; color: #155724; }
+.daraz-status-delivered { background: #d1ecf1; color: #0c5460; }
+.daraz-status-cancelled { background: #f8d7da; color: #721c24; }
+
+.daraz-order-total {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #ff6b35;
 }
 
-.status-processing {
-    background: #cce5ff;
-    color: #004085;
+.daraz-empty-state {
+    text-align: center;
+    padding: 60px 20px;
 }
 
-.status-shipped {
-    background: #d4edda;
-    color: #155724;
+.daraz-empty-state i {
+    font-size: 4rem;
+    color: #dee2e6;
+    margin-bottom: 20px;
 }
 
-.status-delivered {
-    background: #d1ecf1;
-    color: #0c5460;
+.daraz-empty-state h5 {
+    color: #6c757d;
+    margin-bottom: 10px;
 }
 
-.status-cancelled {
-    background: #f8d7da;
-    color: #721c24;
-}
-
-.nav-tabs .nav-link {
-    color: var(--text-dark);
-    font-weight: 600;
-    border: none;
-    background: transparent;
-}
-
-.nav-tabs .nav-link.active {
-    color: var(--primary-color);
-    background: transparent;
-    border-bottom: 3px solid var(--primary-color);
-}
-
-.nav-tabs .nav-link:hover {
-    color: var(--accent-color);
+.daraz-empty-state p {
+    color: #adb5bd;
+    margin-bottom: 20px;
 }
 </style>
 
-<div class="container">
-    <div class="profile-container">
-        <!-- Profile Header -->
-        <div class="profile-header">
-            <div class="row align-items-center">
-                <div class="col-md-2">
-                    <div class="profile-avatar">
+<div class="daraz-profile-container">
+    <div class="container">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-lg-3">
+                <div class="daraz-profile-sidebar">
+                    <div class="daraz-profile-avatar">
                         <i class="fas fa-user"></i>
                     </div>
-                </div>
-                <div class="col-md-10">
-                    <h2>{{ current_user.name }}</h2>
-                    <p class="mb-1"><i class="fas fa-envelope me-2"></i>{{ current_user.email }}</p>
-                    {% if current_user.phone %}
-                    <p class="mb-1"><i class="fas fa-phone me-2"></i>{{ current_user.phone }}</p>
-                    {% endif %}
-                    {% if current_user.address %}
-                    <p class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>{{ current_user.address }}</p>
-                    {% endif %}
+                    <div class="daraz-profile-name">{{ current_user.name }}</div>
+                    <div class="daraz-profile-email">{{ current_user.email }}</div>
+                    
+                    <ul class="daraz-profile-menu">
+                        <li><a href="#profile" class="active"><i class="fas fa-user"></i> My Profile</a></li>
+                        <li><a href="{{ url_for('track_order') }}"><i class="fas fa-shipping-fast"></i> Track Order</a></li>
+                        <li><a href="#orders"><i class="fas fa-shopping-bag"></i> My Orders</a></li>
+                        <li><a href="#reviews"><i class="fas fa-star"></i> My Reviews</a></li>
+                        <li><a href="#wishlist"><i class="fas fa-heart"></i> Wishlist</a></li>
+                        <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                    </ul>
                 </div>
             </div>
-        </div>
-
-        <!-- Profile Tabs -->
-        <ul class="nav nav-tabs mb-4" id="profileTab" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-info" type="button" role="tab">
-                    <i class="fas fa-user me-2"></i>Profile Information
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" type="button" role="tab">
-                    <i class="fas fa-shopping-bag me-2"></i>My Orders
-                </button>
-            </li>
-        </ul>
-
-        <div class="tab-content" id="profileTabContent">
-            <!-- Profile Information Tab -->
-            <div class="tab-pane fade show active" id="profile-info" role="tabpanel">
-                <h4 class="section-title">Update Profile Information</h4>
-                <form method="POST" action="{{ url_for('update_profile') }}">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Full Name</label>
-                            <input type="text" name="name" class="form-control" value="{{ current_user.name }}" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Email Address</label>
-                            <input type="email" class="form-control" value="{{ current_user.email }}" readonly>
-                            <small class="text-muted">Email cannot be changed</small>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Phone Number</label>
-                            <input type="tel" name="phone" class="form-control" value="{{ current_user.phone or '' }}" placeholder="+880 1XXX XXXXXX">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Address</label>
-                            <input type="text" name="address" class="form-control" value="{{ current_user.address or '' }}" placeholder="Your address">
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-update">
-                        <i class="fas fa-save me-2"></i>Update Profile
-                    </button>
-                </form>
-            </div>
-
-            <!-- Orders Tab -->
-            <div class="tab-pane fade" id="orders" role="tabpanel">
-                <h4 class="section-title">Recent Orders</h4>
-                {% if orders %}
-                    {% for order in orders %}
-                    <div class="order-card">
-                        <div class="row align-items-center">
-                            <div class="col-md-8">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <h6 class="mb-1">Order #{{ order.id }}</h6>
-                                        <p class="text-muted mb-1">
-                                            <i class="fas fa-calendar me-1"></i>
-                                            {{ order.created_at.strftime('%d %b %Y, %I:%M %p') }}
-                                        </p>
-                                        <p class="mb-1">
-                                            <i class="fas fa-box me-1"></i>
-                                            {{ order.items|length }} items
-                                        </p>
-                                    </div>
-                                    <div class="text-end">
-                                        <h5 class="text-primary mb-2">৳{{ "%.2f"|format(order.total_amount) }}</h5>
-                                        <span class="order-status status-{{ order.status.lower() }}">
-                                            {{ order.status.title() }}
-                                        </span>
-                                    </div>
+            
+            <!-- Main Content -->
+            <div class="col-lg-9">
+                <!-- Profile Information -->
+                <div class="daraz-profile-content mb-4">
+                    <h4 class="daraz-section-title">Profile Information</h4>
+                    <form method="POST" action="{{ url_for('update_profile') }}">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="daraz-form-group">
+                                    <label class="daraz-form-label">Full Name</label>
+                                    <input type="text" name="name" class="daraz-form-control" value="{{ current_user.name }}" required>
                                 </div>
                             </div>
-                            <div class="col-md-4 text-end">
-                                <a href="{{ url_for('order_confirmation', id=order.id) }}" class="btn btn-outline-primary btn-sm">
+                            <div class="col-md-6">
+                                <div class="daraz-form-group">
+                                    <label class="daraz-form-label">Email Address</label>
+                                    <input type="email" class="daraz-form-control" value="{{ current_user.email }}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="daraz-form-group">
+                                    <label class="daraz-form-label">Phone Number</label>
+                                    <input type="tel" name="phone" class="daraz-form-control" value="{{ current_user.phone or '' }}" placeholder="+880 1XXX XXXXXX">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="daraz-form-group">
+                                    <label class="daraz-form-label">Address</label>
+                                    <input type="text" name="address" class="daraz-form-control" value="{{ current_user.address or '' }}" placeholder="Your address">
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="daraz-btn daraz-btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Changes
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- My Orders -->
+                <div class="daraz-profile-content" id="orders">
+                    <h4 class="daraz-section-title">My Orders</h4>
+                    {% if orders %}
+                        {% for order in orders %}
+                        <div class="daraz-order-card">
+                            <div class="daraz-order-header">
+                                <div>
+                                    <div class="daraz-order-id">Order #{{ order.id }}</div>
+                                    <div class="daraz-order-date">{{ order.created_at.strftime('%d %b %Y') }}</div>
+                                </div>
+                                <span class="daraz-order-status daraz-status-{{ order.status.lower() }}">{{ order.status.title() }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-box me-2 text-muted"></i>
+                                    <span class="text-muted">{{ order.items|length }} items</span>
+                                </div>
+                                <div class="daraz-order-total">৳{{ "%.0f"|format(order.total_amount) }}</div>
+                            </div>
+                            <div class="mt-3">
+                                <a href="{{ url_for('order_confirmation', id=order.id) }}" class="daraz-btn daraz-btn-primary btn-sm">
                                     <i class="fas fa-eye me-1"></i>View Details
                                 </a>
                             </div>
                         </div>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="text-center py-5">
-                        <i class="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
-                        <h5 class="text-muted">No orders yet</h5>
-                        <p class="text-muted">Start shopping to see your orders here!</p>
-                        <a href="{{ url_for('shop') }}" class="btn btn-primary">
-                            <i class="fas fa-shopping-bag me-2"></i>Start Shopping
-                        </a>
-                    </div>
-                {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="daraz-empty-state">
+                            <i class="fas fa-shopping-bag"></i>
+                            <h5>No orders yet</h5>
+                            <p>You haven't placed any orders yet.</p>
+                            <a href="{{ url_for('shop') }}" class="daraz-btn daraz-btn-primary">Start Shopping</a>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
