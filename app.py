@@ -147,6 +147,18 @@ class Review(db.Model):
     status = db.Column(db.Enum('approved', 'pending', 'rejected'), default='pending')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+class Wishlist(db.Model):
+    __tablename__ = 'wishlists'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', backref='wishlist_items', lazy=True)
+    product = db.relationship('Product', backref='wishlisted_by', lazy=True)
+
 # Forms
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
@@ -464,6 +476,49 @@ def remove_from_cart():
         'success': True,
         'cart_count': sum(cart.values())
     })
+
+@app.route('/wishlist')
+@login_required
+def wishlist():
+    wishlist_items = Wishlist.query.filter_by(user_id=current_user.id).all()
+    return render_template('wishlist.html', wishlist_items=wishlist_items)
+
+@app.route('/add_to_wishlist', methods=['POST'])
+@login_required
+def add_to_wishlist():
+    product_id = request.form.get('product_id')
+    
+    # Check if already in wishlist
+    existing = Wishlist.query.filter_by(user_id=current_user.id, product_id=product_id).first()
+    if existing:
+        return jsonify({'success': False, 'message': 'Product already in wishlist'})
+    
+    wishlist_item = Wishlist(user_id=current_user.id, product_id=product_id)
+    db.session.add(wishlist_item)
+    db.session.commit()
+    
+    return jsonify({
+        'success': True, 
+        'message': 'Added to wishlist',
+        'wishlist_count': Wishlist.query.filter_by(user_id=current_user.id).count()
+    })
+
+@app.route('/remove_from_wishlist', methods=['POST'])
+@login_required
+def remove_from_wishlist():
+    product_id = request.form.get('product_id')
+    wishlist_item = Wishlist.query.filter_by(user_id=current_user.id, product_id=product_id).first()
+    
+    if wishlist_item:
+        db.session.delete(wishlist_item)
+        db.session.commit()
+        return jsonify({
+            'success': True, 
+            'message': 'Removed from wishlist',
+            'wishlist_count': Wishlist.query.filter_by(user_id=current_user.id).count()
+        })
+    
+    return jsonify({'success': False, 'message': 'Item not found'})
 
 @app.route('/checkout', methods=['GET', 'POST'])
 @login_required

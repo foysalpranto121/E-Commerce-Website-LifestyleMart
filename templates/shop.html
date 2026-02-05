@@ -136,6 +136,15 @@
     overflow: hidden;
 }
 
+.product-title-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.product-title-link:hover .product-title {
+    color: var(--primary-color);
+}
+
 .product-price {
     display: flex;
     align-items: center;
@@ -342,20 +351,22 @@
                         {% for product in products.items %}
                         <div class="product-card">
                             <div class="product-image">
-                                <img src="{{ product.image or 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1399&q=80' }}" 
+                                <img src="{{ product.image or 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' }}" 
                                      alt="{{ product.name }}">
                                 <div class="discount-badge">-20%</div>
                                 <div class="product-actions">
-                                    <button class="action-btn" title="Add to Wishlist">
+                                    <button class="action-btn" title="Add to Wishlist" onclick="addToWishlist('{{ product.id }}')">
                                         <i class="fas fa-heart"></i>
                                     </button>
-                                    <button class="action-btn" title="Quick View">
+                                    <button class="action-btn" title="Quick View" data-bs-toggle="modal" data-bs-target="#quickViewModal{{ product.id }}">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
                             </div>
                             <div class="product-body">
-                                <h6 class="product-title">{{ product.name }}</h6>
+                                <a href="{{ url_for('product_detail', id=product.id) }}" class="product-title-link">
+                                    <h6 class="product-title">{{ product.name }}</h6>
+                                </a>
                                 <div class="product-price">
                                     <span class="current-price">৳{{ "%.2f"|format(product.price) }}</span>
                                     <span class="original-price">৳{{ "%.2f"|format(product.price * 1.25) }}</span>
@@ -438,4 +449,83 @@
         </div>
     </div>
 </div>
+
+<!-- Quick View Modals -->
+{% for product in products.items %}
+<div class="modal fade" id="quickViewModal{{ product.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">{{ product.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <img src="{{ product.image or 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' }}" 
+                             class="img-fluid rounded" alt="{{ product.name }}">
+                    </div>
+                    <div class="col-md-6">
+                        <h4>{{ product.name }}</h4>
+                        <div class="product-price mb-3">
+                            <span class="current-price fs-3 fw-bold text-primary">৳{{ "%.2f"|format(product.price) }}</span>
+                            <span class="original-price text-decoration-line-through ms-2">৳{{ "%.2f"|format(product.price * 1.25) }}</span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="badge bg-success">In Stock</span>
+                            <span class="badge bg-primary">{{ product.brand }}</span>
+                        </div>
+                        <p>{{ product.description|truncate(200) }}</p>
+                        <div class="d-grid gap-2">
+                            <form action="{{ url_for('add_to_cart') }}" method="POST">
+                                <input type="hidden" name="product_id" value="{{ product.id }}">
+                                <input type="hidden" name="quantity" value="1">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-shopping-cart me-2"></i>Add to Cart
+                                </button>
+                            </form>
+                            <button class="btn btn-outline-danger" onclick="addToWishlist('{{ product.id }}')">
+                                <i class="fas fa-heart me-2"></i>Add to Wishlist
+                            </button>
+                            <a href="{{ url_for('product_detail', id=product.id) }}" class="btn btn-outline-primary">
+                                <i class="fas fa-eye me-2"></i>View Full Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<script>
+{% if current_user.is_authenticated %}
+function addToWishlist(productId) {
+    fetch('/add_to_wishlist', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'product_id=' + productId
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Added to wishlist!');
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+{% else %}
+function addToWishlist(productId) {
+    alert('Please login to add to wishlist');
+    window.location.href = '/login';
+}
+{% endif %}
+</script>
 {% endblock %}

@@ -240,26 +240,26 @@
         </div>
         <div class="daraz-flash-grid">
             <div class="daraz-flash-card">
-                <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="T-Shirt">
+                <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Premium Cotton T-Shirt">
                 <h6>Premium Cotton T-Shirt</h6>
                 <span class="daraz-original-price">৳1,500</span>
                 <div class="daraz-discount-price">৳750</div>
             </div>
             <div class="daraz-flash-card">
-                <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Sneakers">
+                <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Red Running Shoes">
                 <h6>Red Running Shoes</h6>
                 <span class="daraz-original-price">৳4,500</span>
                 <div class="daraz-discount-price">৳2,700</div>
             </div>
             <div class="daraz-flash-card">
-                <img src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Handbag">
-                <h6>Designer Handbag</h6>
+                <img src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Leather Handbag">
+                <h6>Leather Handbag</h6>
                 <span class="daraz-original-price">৳3,500</span>
                 <div class="daraz-discount-price">৳2,100</div>
             </div>
             <div class="daraz-flash-card">
-                <img src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Watch">
-                <h6>Fashion Watch</h6>
+                <img src="https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Elegant Summer Dress">
+                <h6>Elegant Summer Dress</h6>
                 <span class="daraz-original-price">৳2,800</span>
                 <div class="daraz-discount-price">৳1,680</div>
             </div>
@@ -314,7 +314,7 @@
             {% for product in products[:8] if products %}
             <div class="daraz-product-card">
                 <div class="daraz-product-image">
-                    <img src="{{ product.image_url or 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' }}" alt="{{ product.name }}">
+                    <img src="{{ product.image or 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' }}" alt="{{ product.name }}">
                 </div>
                 <div class="daraz-product-info">
                     <h6 class="daraz-product-title">{{ product.name }}</h6>
@@ -332,7 +332,7 @@
             {% else %}
             <div class="daraz-product-card">
                 <div class="daraz-product-image">
-                    <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="T-Shirt">
+                    <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="T-Shirt">
                 </div>
                 <div class="daraz-product-info">
                     <h6 class="daraz-product-title">Premium Cotton T-Shirt</h6>
@@ -347,11 +347,11 @@
             </div>
             <div class="daraz-product-card">
                 <div class="daraz-product-image">
-                    <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Shoes">
+                    <img src="https://images.unsplash.com/photo-1542272604-787c3839105e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Jeans">
                 </div>
                 <div class="daraz-product-info">
-                    <h6 class="daraz-product-title">Running Shoes</h6>
-                    <div class="daraz-product-price">৳3,500</div>
+                    <h6 class="daraz-product-title">Classic Denim Jeans</h6>
+                    <div class="daraz-product-price">৳2,500</div>
                     <div class="daraz-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
                     <form action="{{ url_for('add_to_cart') }}" method="POST">
                         <input type="hidden" name="product_id" value="2">
@@ -362,11 +362,11 @@
             </div>
             <div class="daraz-product-card">
                 <div class="daraz-product-image">
-                    <img src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Handbag">
+                    <img src="https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Dress">
                 </div>
                 <div class="daraz-product-info">
-                    <h6 class="daraz-product-title">Leather Handbag</h6>
-                    <div class="daraz-product-price">৳4,200</div>
+                    <h6 class="daraz-product-title">Elegant Summer Dress</h6>
+                    <div class="daraz-product-price">৳1,900</div>
                     <div class="daraz-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i></div>
                     <form action="{{ url_for('add_to_cart') }}" method="POST">
                         <input type="hidden" name="product_id" value="3">
@@ -377,11 +377,11 @@
             </div>
             <div class="daraz-product-card">
                 <div class="daraz-product-image">
-                    <img src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Watch">
+                    <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Shoes">
                 </div>
                 <div class="daraz-product-info">
-                    <h6 class="daraz-product-title">Fashion Watch</h6>
-                    <div class="daraz-product-price">৳2,800</div>
+                    <h6 class="daraz-product-title">Red Running Shoes</h6>
+                    <div class="daraz-product-price">৳3,500</div>
                     <div class="daraz-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
                     <form action="{{ url_for('add_to_cart') }}" method="POST">
                         <input type="hidden" name="product_id" value="4">
