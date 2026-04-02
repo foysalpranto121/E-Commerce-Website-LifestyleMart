@@ -16,8 +16,8 @@ def create_sample_data():
         # Check if admin already exists
         existing_admin = User.query.filter_by(email='admin@lifestylemart.com').first()
         if existing_admin:
-            print("✅ Database already initialized!")
-            print(f"📊 Current data: {Category.query.count()} categories, {Product.query.count()} products, {User.query.count()} users")
+            print("[OK] Database already initialized!")
+            print(f"[INFO] Current data: {Category.query.count()} categories, {Product.query.count()} products, {User.query.count()} users")
             return
         
         # Create admin user
@@ -93,7 +93,7 @@ def create_sample_data():
                 'price': 4200,
                 'stock': 20,
                 'brand': 'Chic Style',
-                'image': 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+                'image': 'https://images.unsplash.com/photo-1594938298603-d91aecb6caea?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
                 'is_featured': True
             },
             {
@@ -216,12 +216,12 @@ def create_sample_data():
         
         db.session.commit()
         
-        print("✅ Sample data created successfully!")
-        print(f"📊 Created {Category.query.count()} categories")
-        print(f"🛍️ Created {Product.query.count()} products")
-        print(f"👥 Created {User.query.count()} users")
-        print(f"⭐ Created {Review.query.count()} reviews")
-        print("\n🔐 Admin login credentials:")
+        print("[OK] Sample data created successfully!")
+        print(f"[INFO] Created {Category.query.count()} categories")
+        print(f"[INFO] Created {Product.query.count()} products")
+        print(f"[INFO] Created {User.query.count()} users")
+        print(f"[INFO] Created {Review.query.count()} reviews")
+        print("\n[INFO] Admin login credentials:")
         print("   Email: admin@lifestylemart.com")
         print("   Password: admin123")
 
