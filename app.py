@@ -148,6 +148,55 @@ class Review(db.Model):
     status = db.Column(db.Enum('approved', 'pending', 'rejected'), default='pending')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+class FlashDeal(db.Model):
+    __tablename__ = 'flash_deals'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    discount_percent = db.Column(db.Integer, nullable=False)  # e.g., 20 for 20% off
+    original_price = db.Column(db.Float, nullable=False)
+    deal_price = db.Column(db.Float, nullable=False)
+    start_time = db.Column(db.DateTime, default=datetime.utcnow)
+    end_time = db.Column(db.DateTime, nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship
+    product = db.relationship('Product', backref='flash_deals')
+
+class Offer(db.Model):
+    __tablename__ = 'offers'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(150), nullable=False)
+    description = db.Column(db.Text)
+    discount_type = db.Column(db.Enum('percentage', 'fixed'), default='percentage')
+    discount_value = db.Column(db.Float, nullable=False)  # percentage or fixed amount
+    min_purchase = db.Column(db.Float, default=0)  # minimum purchase amount
+    max_discount = db.Column(db.Float, nullable=True)  # maximum discount cap
+    code = db.Column(db.String(50), unique=True)  # promo code
+    start_date = db.Column(db.DateTime, default=datetime.utcnow)
+    end_date = db.Column(db.DateTime, nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class GiftCard(db.Model):
+    __tablename__ = 'gift_cards'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(50), unique=True, nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    balance = db.Column(db.Float, nullable=False)
+    purchaser_id = db.Column(db.Integer, db.ForeignKey('users.id'))  # who bought it
+    recipient_email = db.Column(db.String(100))  # email of recipient
+    message = db.Column(db.Text)
+    is_redeemed = db.Column(db.Boolean, default=False)
+    expiry_date = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship
+    purchaser = db.relationship('User', foreign_keys=[purchaser_id], backref='purchased_gift_cards')
+
 class Wishlist(db.Model):
     __tablename__ = 'wishlists'
     
