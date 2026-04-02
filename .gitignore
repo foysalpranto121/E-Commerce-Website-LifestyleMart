@@ -74,3 +74,5 @@ static/uploads/*.jpeg
 
 # Python cache
 __pycache__
+
+.vercel
