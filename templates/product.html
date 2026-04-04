@@ -296,6 +296,25 @@
                             <i class="fas fa-heart"></i>
                         </button>
                     </div>
+
+                    <!-- Seller Info -->
+                    <div class="card border-0 bg-light p-3 mb-4 rounded-3 border-start border-primary border-4">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <i class="fas fa-store fa-2x text-primary border p-2 rounded-circle bg-white"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">Sold by: {{ product.seller.shop_name if product.seller and product.seller.shop_name else 'Lifestyle Mart Official' }}</h6>
+                                <p class="mb-0 small text-muted">Verified Seller since {{ product.seller.created_at.strftime('%Y') if product.seller else '2024' }}</p>
+                            </div>
+                            <div class="ms-auto d-flex gap-2">
+                                <a href="{{ url_for('chat', user_id=product.seller_id) if product.seller_id else '#' }}" class="btn btn-primary btn-sm rounded-pill px-3">
+                                    <i class="fas fa-comment-dots me-1"></i>Chat
+                                </a>
+                                <a href="#" class="btn btn-outline-primary btn-sm rounded-pill px-3">Visit Store</a>
+                            </div>
+                        </div>
+                    </div>
                     
                     <div class="product-features">
                         <div class="feature-item">
@@ -373,7 +392,14 @@
                                 {{ review.user.name[0].upper() if review.user.name else 'U' }}
                             </div>
                             <div>
-                                <h6 class="mb-0">{{ review.user.name }}</h6>
+                                <div class="d-flex align-items-center gap-2">
+                                    <h6 class="mb-0">{{ review.user.name }}</h6>
+                                    {% if current_user.is_authenticated and current_user.id != review.user_id %}
+                                    <a href="{{ url_for('chat', user_id=review.user_id) }}" class="text-primary" title="Message user">
+                                        <i class="fas fa-comment-dots"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
                                 <div class="stars">
                                     {% for i in range(5) %}
                                         {% if i < review.rating %}

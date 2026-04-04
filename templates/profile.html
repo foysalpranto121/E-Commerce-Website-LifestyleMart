@@ -234,6 +234,9 @@
                     
                     <ul class="daraz-profile-menu">
                         <li><a href="#profile" class="active"><i class="fas fa-user"></i> My Profile</a></li>
+                        {% if current_user.role == 'seller' %}
+                            <li><a href="{{ url_for('seller_dashboard') }}"><i class="fas fa-store"></i> Seller Dashboard</a></li>
+                        {% endif %}
                         <li><a href="{{ url_for('track_order') }}"><i class="fas fa-shipping-fast"></i> Track Order</a></li>
                         <li><a href="#orders"><i class="fas fa-shopping-bag"></i> My Orders</a></li>
                         <li><a href="#reviews"><i class="fas fa-star"></i> My Reviews</a></li>
@@ -283,6 +286,48 @@
                     </form>
                 </div>
                 
+                {% if current_user.role != 'seller' %}
+                <!-- Become a Seller Teaser -->
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 p-4 mt-4 bg-primary text-white">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h4 class="fw-bold mb-2">Want to sell on Lifestyle Mart?</h4>
+                            <p class="mb-0 text-white-50">Join our growing community of successful sellers and reach millions of customers across Bangladesh.</p>
+                        </div>
+                        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                            <a href="{{ url_for('become_seller') }}" class="btn btn-light fw-bold px-4 py-2">
+                                <i class="fas fa-rocket me-2"></i>Apply Now
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <!-- Shop Settings (for Sellers) -->
+                <div class="daraz-profile-content mb-4 mt-4">
+                    <h4 class="daraz-section-title">Shop Settings</h4>
+                    <form method="POST" action="{{ url_for('update_profile') }}">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="daraz-form-group">
+                                    <label class="daraz-form-label">Shop Name</label>
+                                    <input type="text" name="shop_name" class="daraz-form-control" value="{{ current_user.shop_name or '' }}" placeholder="Enter your shop name">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="daraz-form-group">
+                                    <label class="daraz-form-label">Shop Description</label>
+                                    <textarea name="shop_description" class="daraz-form-control" rows="3" placeholder="Describe what you sell...">{{ current_user.shop_description or '' }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="daraz-btn daraz-btn-primary">
+                            <i class="fas fa-store me-2"></i>Update Shop
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+
+                
                 <!-- My Orders -->
                 <div class="daraz-profile-content" id="orders">
                     <h4 class="daraz-section-title">My Orders</h4>
@@ -322,6 +367,11 @@
                                 <a href="{{ url_for('order_confirmation', id=order.id) }}" class="daraz-btn daraz-btn-primary">
                                     <i class="fas fa-eye me-1"></i>View Details
                                 </a>
+                                {% if order.order_items[0].product.seller_id %}
+                                <a href="{{ url_for('chat', user_id=order.order_items[0].product.seller_id) }}" class="daraz-btn" style="background:#fff3cd; color:#856404; border:1px solid #ffeeba;">
+                                    <i class="fas fa-comment-dots me-1"></i>Message Seller
+                                </a>
+                                {% endif %}
                                 <a href="{{ url_for('track_order') }}" class="daraz-btn" style="background:#f5f5f5; color:#333; border:1px solid #ddd;">
                                     <i class="fas fa-shipping-fast me-1"></i>Track Order
                                 </a>

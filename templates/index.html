@@ -333,11 +333,11 @@
                 <p class="text-muted">Discover premium quality products from Bangladesh's top national brands.</p>
             </div>
             <div class="col-12 d-flex justify-content-center gap-4 flex-wrap mt-3">
-                <span class="badge bg-white text-dark border p-3 rounded shadow-sm fw-bold fs-6">Aarong</span>
-                <span class="badge bg-white text-dark border p-3 rounded shadow-sm fw-bold fs-6">Apex</span>
-                <span class="badge bg-white text-dark border p-3 rounded shadow-sm fw-bold fs-6">Yellow</span>
-                <span class="badge bg-white text-dark border p-3 rounded shadow-sm fw-bold fs-6">Walton</span>
-                <span class="badge bg-white text-dark border p-3 rounded shadow-sm fw-bold fs-6">Le Reve</span>
+                <a href="{{ url_for('shop', brand='Aarong') }}" class="badge bg-white text-dark border p-3 rounded shadow-sm fw-bold fs-6 text-decoration-none">Aarong</a>
+                <a href="{{ url_for('shop', brand='Apex') }}" class="badge bg-white text-dark border p-3 rounded shadow-sm fw-bold fs-6 text-decoration-none">Apex</a>
+                <a href="{{ url_for('shop', brand='Yellow') }}" class="badge bg-white text-dark border p-3 rounded shadow-sm fw-bold fs-6 text-decoration-none">Yellow</a>
+                <a href="{{ url_for('shop', brand='Walton') }}" class="badge bg-white text-dark border p-3 rounded shadow-sm fw-bold fs-6 text-decoration-none">Walton</a>
+                <a href="{{ url_for('shop', brand='Le Reve') }}" class="badge bg-white text-dark border p-3 rounded shadow-sm fw-bold fs-6 text-decoration-none">Le Reve</a>
             </div>
         </div>
         
@@ -361,7 +361,14 @@
                     <form action="{{ url_for('add_to_cart') }}" method="POST">
                         <input type="hidden" name="product_id" value="{{ product.id }}">
                         <input type="hidden" name="quantity" value="1">
-                        <button type="submit" class="daraz-btn-cart">Add to Cart</button>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="daraz-btn-cart">Add to Cart</button>
+                            {% if product.brand and brand_seller_ids.get(product.brand) %}
+                            <a href="{{ url_for('chat', user_id=brand_seller_ids.get(product.brand)) }}" class="btn btn-outline-primary btn-sm rounded-pill py-2">
+                                <i class="fas fa-comment-dots me-1"></i>Message {{ product.brand }}
+                            </a>
+                            {% endif %}
+                        </div>
                     </form>
                 </div>
             </div>
@@ -370,60 +377,104 @@
                 {% endif %}
             {% endfor %}
             
-            {% if bd_count.value == 0 %}
-            <!-- Demo placeholders if no products exist -->
+            {% if bd_count.value < 1 %}
+            <!-- Placeholder 1: Aarong -->
             <div class="daraz-product-card position-relative">
                 <span class="position-absolute top-0 end-0 bg-danger text-white px-2 py-1 m-2 rounded small fw-bold shadow-sm" style="z-index:10;"><i class="fas fa-tag me-1"></i>USE: LIFESTYLE50</span>
                 <div class="daraz-product-image position-relative">
                     <span class="position-absolute top-0 start-0 bg-success text-white px-2 py-1 m-2 rounded small" style="z-index:10;"><i class="fas fa-check-circle me-1"></i>Aarong</span>
-                    <img src="https://images.unsplash.com/photo-1583391733958-6c782781878d?auto=format&fit=crop&w=800&q=80" alt="Traditional Kurti">
+                    <img src="https://images.unsplash.com/photo-1708534246055-d7b149acb731?q=80&w=800&auto=format&fit=crop" alt="Traditional Kurti">
                 </div>
                 <div class="daraz-product-info">
-                    <h6 class="daraz-product-title">Traditional Cotton Kurti</h6>
+                    <h6 class="daraz-product-title">Aarong Cotton Kurti</h6>
                     <div class="daraz-product-price">৳2,200</div>
                     <div class="daraz-stars"><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star-half-alt text-warning"></i></div>
-                    <button class="daraz-btn-cart">View Product</button>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('shop', brand='Aarong') }}" class="daraz-btn-cart text-center text-decoration-none d-block">View Product</a>
+                        {% if brand_seller_ids.get('Aarong') %}
+                        <a href="{{ url_for('chat', user_id=brand_seller_ids.get('Aarong')) }}" class="btn btn-outline-primary btn-sm rounded-pill py-2">
+                            <i class="fas fa-comment-dots me-1"></i>Message Aarong
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
+            {% set bd_count.value = bd_count.value + 1 %}
+            {% endif %}
+
+            {% if bd_count.value < 2 %}
+            <!-- Placeholder 2: Apex -->
             <div class="daraz-product-card position-relative">
                 <span class="position-absolute top-0 end-0 bg-danger text-white px-2 py-1 m-2 rounded small fw-bold shadow-sm" style="z-index:10;"><i class="fas fa-tag me-1"></i>USE: LIFESTYLE50</span>
                 <div class="daraz-product-image position-relative">
                     <span class="position-absolute top-0 start-0 bg-success text-white px-2 py-1 m-2 rounded small" style="z-index:10;"><i class="fas fa-check-circle me-1"></i>Apex</span>
-                    <img src="https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=800&q=80" alt="Leather Shoes">
+                    <img src="https://images.unsplash.com/photo-1677203006929-fd0d9f4f350d?q=80&w=800&auto=format&fit=crop" alt="Leather Shoes">
                 </div>
                 <div class="daraz-product-info">
-                    <h6 class="daraz-product-title">Premium Leather Oxfords</h6>
+                    <h6 class="daraz-product-title">Apex Premium Leather Oxfords</h6>
                     <div class="daraz-product-price">৳4,500</div>
                     <div class="daraz-stars"><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i></div>
-                    <button class="daraz-btn-cart">View Product</button>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('shop', brand='Apex') }}" class="daraz-btn-cart text-center text-decoration-none d-block">View Product</a>
+                        {% if brand_seller_ids.get('Apex') %}
+                        <a href="{{ url_for('chat', user_id=brand_seller_ids.get('Apex')) }}" class="btn btn-outline-primary btn-sm rounded-pill py-2">
+                            <i class="fas fa-comment-dots me-1"></i>Message Apex
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
+            {% set bd_count.value = bd_count.value + 1 %}
+            {% endif %}
+
+            {% if bd_count.value < 3 %}
+            <!-- Placeholder 3: Yellow -->
             <div class="daraz-product-card position-relative">
                 <span class="position-absolute top-0 end-0 bg-danger text-white px-2 py-1 m-2 rounded small fw-bold shadow-sm" style="z-index:10;"><i class="fas fa-tag me-1"></i>USE: LIFESTYLE50</span>
                 <div class="daraz-product-image position-relative">
                     <span class="position-absolute top-0 start-0 bg-success text-white px-2 py-1 m-2 rounded small" style="z-index:10;"><i class="fas fa-check-circle me-1"></i>Yellow</span>
-                    <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=800&q=80" alt="Casual Men's Shirt">
+                    <img src="https://images.unsplash.com/photo-1581655353564-df123a1eb820?auto=format&fit=crop&w=800&q=80" alt="Casual Men's Shirt">
                 </div>
                 <div class="daraz-product-info">
-                    <h6 class="daraz-product-title">Casual Men's Shirt</h6>
-                    <div class="daraz-product-price">৳1,800</div>
+                    <h6 class="daraz-product-title">Yellow Men's Polo Shirt</h6>
+                    <div class="daraz-product-price">৳1,500</div>
                     <div class="daraz-stars"><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="far fa-star text-warning"></i></div>
-                    <button class="daraz-btn-cart">View Product</button>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('shop', brand='Yellow') }}" class="daraz-btn-cart text-center text-decoration-none d-block">View Product</a>
+                        {% if brand_seller_ids.get('Yellow') %}
+                        <a href="{{ url_for('chat', user_id=brand_seller_ids.get('Yellow')) }}" class="btn btn-outline-primary btn-sm rounded-pill py-2">
+                            <i class="fas fa-comment-dots me-1"></i>Message Yellow
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
+            {% set bd_count.value = bd_count.value + 1 %}
+            {% endif %}
+
+            {% if bd_count.value < 4 %}
+            <!-- Placeholder 4: Walton -->
             <div class="daraz-product-card position-relative">
                 <span class="position-absolute top-0 end-0 bg-danger text-white px-2 py-1 m-2 rounded small fw-bold shadow-sm" style="z-index:10;"><i class="fas fa-tag me-1"></i>USE: LIFESTYLE50</span>
                 <div class="daraz-product-image position-relative">
                     <span class="position-absolute top-0 start-0 bg-success text-white px-2 py-1 m-2 rounded small" style="z-index:10;"><i class="fas fa-check-circle me-1"></i>Walton</span>
-                    <img src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=800&q=80" alt="Smartwatch">
+                    <img src="https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=800&q=80" alt="Smartwatch">
                 </div>
                 <div class="daraz-product-info">
                     <h6 class="daraz-product-title">Walton Tick Smartwatch</h6>
                     <div class="daraz-product-price">৳3,200</div>
                     <div class="daraz-stars"><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star-half-alt text-warning"></i></div>
-                    <button class="daraz-btn-cart">View Product</button>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('shop', brand='Walton') }}" class="daraz-btn-cart text-center text-decoration-none d-block">View Product</a>
+                        {% if brand_seller_ids.get('Walton') %}
+                        <a href="{{ url_for('chat', user_id=brand_seller_ids.get('Walton')) }}" class="btn btn-outline-primary btn-sm rounded-pill py-2">
+                            <i class="fas fa-comment-dots me-1"></i>Message Walton
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
+            {% set bd_count.value = bd_count.value + 1 %}
             {% endif %}
         </div>
     </div>

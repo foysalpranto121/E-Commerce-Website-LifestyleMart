@@ -206,28 +206,79 @@
     text-decoration: none;
     color: var(--text-dark);
     transition: all 0.3s ease;
+    font-size: 0.9rem;
+    font-weight: 500;
 }
 
 .category-pill:hover,
 .category-pill.active {
     background: var(--primary-color);
-    color: white;
+    color: white !important;
     border-color: var(--primary-color);
+    box-shadow: 0 4px 10px rgba(255, 107, 0, 0.3);
 }
 
-.form-check-input:checked {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
+.brand-list {
+    max-height: 250px;
+    overflow-y: auto;
+    padding-right: 5px;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    padding: 10px;
 }
 
-.price-range {
+.brand-list::-webkit-scrollbar {
+    width: 5px;
+}
+
+.brand-list::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
+}
+
+.brand-search {
+    margin-bottom: 10px;
+}
+
+.price-range-inputs {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 
-.price-range input {
-    flex: 1;
+.price-range-inputs input {
+    height: 38px;
+    border-radius: 6px;
+}
+
+.filter-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    margin-top: 15px;
+    width: 100%;
+}
+
+.clear-filter {
+    background: #f8f9fa;
+    color: #6c757d;
+    border: 1px solid #dee2e6;
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    margin-top: 10px;
+    width: 100%;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+}
+
+.clear-filter:hover {
+    background: #e9ecef;
+    color: #495057;
 }
 
 .pagination .page-link {
@@ -275,10 +326,10 @@
                 <div class="col-md-4 text-end">
                     <div class="d-flex align-items-center justify-content-end gap-3">
                         <span class="text-white">Sort by:</span>
-                        <select class="form-select" onchange="location.href='?sort='+this.value+'&category={{ category_id or '' }}&search={{ search or '' }}'">
+                        <select class="form-select" onchange="applySort(this.value)">
                             <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest First</option>
-                            <option value="price-low" {% if sort == 'price-low' %}selected{% endif %}>Price: Low to High</option>
-                            <option value="price-high" {% if sort == 'price-high' %}selected{% endif %}>Price: High to Low</option>
+                            <option value="price_low" {% if sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                            <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
                             <option value="name" {% if sort == 'name' %}selected{% endif %}>Name: A to Z</option>
                         </select>
                     </div>
@@ -289,59 +340,59 @@
         <div class="row">
             <!-- Sidebar Filters -->
             <div class="col-lg-3">
-                <div class="filter-sidebar">
-                    <!-- Categories -->
-                    <div class="filter-section">
-                        <h5 class="filter-title">Categories</h5>
-                        <div class="category-pills">
-                            <a href="?category=&search={{ search or '' }}" class="category-pill {% if not category_id %}active{% endif %}">
-                                All Categories
-                            </a>
-                            {% for category in categories %}
-                            <a href="?category={{ category.id }}&search={{ search or '' }}" 
-                               class="category-pill {% if category_id == category.id %}active{% endif %}">
-                                {{ category.name }}
-                            </a>
-                            {% endfor %}
-                        </div>
-                    </div>
+                <form action="{{ url_for('shop') }}" method="GET" id="filterForm">
+                    <input type="hidden" name="search" value="{{ search or '' }}">
+                    <input type="hidden" name="category" id="category_id" value="{{ category_id or '' }}">
+                    <input type="hidden" name="sort" id="sort_order" value="{{ sort or 'name' }}">
 
-                    <!-- Price Range -->
-                    <div class="filter-section">
-                        <h5 class="filter-title">Price Range</h5>
-                        <div class="price-range">
-                            <input type="number" class="form-control" placeholder="Min" min="0">
-                            <span>-</span>
-                            <input type="number" class="form-control" placeholder="Max" min="0">
+                    
+                    <div class="filter-sidebar">
+                        <!-- Categories -->
+                        <div class="filter-section">
+                            <h5 class="filter-title">Categories</h5>
+                            <div class="category-pills">
+                                <a href="javascript:void(0)" onclick="setCategory('')" 
+                                   class="category-pill {% if not category_id %}active{% endif %}">
+                                    All Categories
+                                </a>
+                                {% for category in categories %}
+                                <a href="javascript:void(0)" onclick="setCategory('{{ category.id }}')" 
+                                   class="category-pill {% if category_id == category.id %}active{% endif %}">
+                                    {{ category.name }}
+                                </a>
+                                {% endfor %}
+                            </div>
                         </div>
-                        <button class="btn btn-primary btn-sm mt-2 w-100">Apply Filter</button>
-                    </div>
 
-                    <!-- Brands -->
-                    <div class="filter-section">
-                        <h5 class="filter-title">Bangladeshi Brands</h5>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="brand1">
-                            <label class="form-check-label" for="brand1">Aarong</label>
+                        <!-- Price Range -->
+                        <div class="filter-section">
+                            <h5 class="filter-title">Price Range</h5>
+                            <div class="price-range-inputs">
+                                <input type="number" name="min_price" class="form-control" placeholder="Min" min="0" value="{{ min_price or '' }}">
+                                <span>-</span>
+                                <input type="number" name="max_price" class="form-control" placeholder="Max" min="0" value="{{ max_price or '' }}">
+                            </div>
                         </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="brand2">
-                            <label class="form-check-label" for="brand2">Sailor</label>
+
+                        <!-- Brands -->
+                        <div class="filter-section">
+                            <h5 class="filter-title">Brands</h5>
+                            <input type="text" class="form-control form-control-sm brand-search mb-2" placeholder="Search brands..." onkeyup="filterBrands(this.value)">
+                            <div class="brand-list" id="brandList">
+                                {% for b in brands %}
+                                <div class="form-check brand-check">
+                                    <input class="form-check-input" type="checkbox" name="brand" value="{{ b }}" id="brand_{{ loop.index }}" 
+                                           {% if b in brand %}checked{% endif %}>
+                                    <label class="form-check-label" for="brand_{{ loop.index }}">{{ b }}</label>
+                                </div>
+                                {% endfor %}
+                            </div>
                         </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="brand3">
-                            <label class="form-check-label" for="brand3">Apex</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="brand4">
-                            <label class="form-check-label" for="brand4">Bata</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="brand5">
-                            <label class="form-check-label" for="brand5">Yellow</label>
-                        </div>
+
+                        <button type="submit" class="filter-btn">Apply Filters</button>
+                        <a href="{{ url_for('shop') }}" class="clear-filter">Clear All</a>
                     </div>
-                </div>
+                </form>
             </div>
 
             <!-- Products Grid -->
@@ -500,7 +551,27 @@
 {% endfor %}
 
 <script>
+function setCategory(id) {
+    document.getElementById('category_id').value = id;
+    document.getElementById('filterForm').submit();
+}
+
+function applySort(val) {
+    document.getElementById('sort_order').value = val;
+    document.getElementById('filterForm').submit();
+}
+
+function filterBrands(query) {
+    const brands = document.querySelectorAll('.brand-check');
+    query = query.toLowerCase();
+    brands.forEach(b => {
+        const text = b.textContent.toLowerCase();
+        b.style.display = text.includes(query) ? '' : 'none';
+    });
+}
+
 {% if current_user.is_authenticated %}
+
 function addToWishlist(productId) {
     fetch('/add_to_wishlist', {
         method: 'POST',

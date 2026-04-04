@@ -54,11 +54,14 @@ class User(UserMixin, db.Model):
     phone = db.Column(db.String(20))
     address = db.Column(db.Text)
     role = db.Column(db.Enum('user', 'admin', 'seller'), default='user')
+    shop_name = db.Column(db.String(100))
+    shop_description = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
     orders = db.relationship('Order', backref='user', lazy=True)
     reviews = db.relationship('Review', backref='user', lazy=True)
+    products = db.relationship('Product', backref='seller', lazy=True)
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -89,6 +92,7 @@ class Product(db.Model):
     stock = db.Column(db.Integer, default=0)
     image = db.Column(db.String(255))
     brand = db.Column(db.String(100))
+    seller_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     is_featured = db.Column(db.Boolean, default=False)
     status = db.Column(db.Enum('active', 'inactive'), default='active')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -218,6 +222,22 @@ class Wishlist(db.Model):
     user = db.relationship('User', backref='wishlist_items', lazy=True)
     product = db.relationship('Product', backref='wishlisted_by', lazy=True)
 
+class Message(db.Model):
+    __tablename__ = 'messages'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    receiver_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=True)
+    content = db.Column(db.Text, nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    sender = db.relationship('User', foreign_keys=[sender_id], backref='sent_messages')
+    receiver = db.relationship('User', foreign_keys=[receiver_id], backref='received_messages')
+    product = db.relationship('Product', backref='related_messages')
+
 # Forms
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
@@ -304,6 +324,15 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def seller_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or current_user.role not in ['seller', 'admin']:
+            flash('Seller access required. Please register as a seller to access this page.', 'warning')
+            return redirect(url_for('profile'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 def generate_order_number():
     return f"LSM{datetime.now().strftime('%Y%m%d')}{secrets.randbelow(10000):04d}"
 
@@ -311,17 +340,36 @@ def generate_order_number():
 @app.route('/')
 def index():
     products = Product.query.filter_by(is_featured=True, status='active').limit(8).all()
-    categories = Category.query.limit(6).all()
+    categories = Category.query.all()
     # Get active flash deals
     flash_deals = FlashDeal.query.filter_by(is_active=True).filter(
         FlashDeal.end_time > datetime.utcnow()
     ).order_by(FlashDeal.end_time.asc()).limit(4).all()
-    return render_template('index.html', products=products, categories=categories, flash_deals=flash_deals)
+    
+    # Get brand seller IDs for direct messaging
+    brand_emails = {
+        'Aarong': 'aarong@seller.bd',
+        'Apex': 'apex@seller.bd',
+        'Yellow': 'yellow@seller.bd',
+        'Walton': 'walton@seller.bd'
+    }
+    brand_seller_ids = {}
+    for brand_name, email in brand_emails.items():
+        seller = User.query.filter_by(email=email).first()
+        if seller:
+            brand_seller_ids[brand_name] = seller.id
+            
+    return render_template('index.html', 
+                          products=products, 
+                          categories=categories, 
+                          flash_deals=flash_deals,
+                          brand_seller_ids=brand_seller_ids)
 
 @app.route('/shop')
 def shop():
     page = request.args.get('page', 1, type=int)
     category_id = request.args.get('category', type=int)
+    brand = request.args.get('brand', '')
     search = request.args.get('search', '')
     sort = request.args.get('sort', 'name')
     min_price = request.args.get('min_price', type=float)
@@ -332,8 +380,11 @@ def shop():
     if category_id:
         query = query.filter_by(category_id=category_id)
     
+    if brand:
+        query = query.filter_by(brand=brand)
+    
     if search:
-        query = query.filter(Product.name.contains(search) | Product.description.contains(search))
+        query = query.filter(Product.name.contains(search) | Product.description.contains(search) | Product.brand.contains(search))
     
     if min_price is not None:
         query = query.filter(Product.price >= min_price)
@@ -352,10 +403,15 @@ def shop():
     
     products = query.paginate(page=page, per_page=12, error_out=False)
     categories = Category.query.all()
+    # Get unique brand names for the filter
+    brands = db.session.query(Product.brand).filter(Product.status == 'active', Product.brand != None).distinct().all()
+    brands = [b[0] for b in brands if b[0]]
     
-    return render_template('shop.html', products=products, categories=categories, 
-                         category_id=category_id, search=search, sort=sort,
+    return render_template('shop.html', products=products, categories=categories, brands=brands,
+                         category_id=category_id, brand=brand, search=search, sort=sort,
                          min_price=min_price, max_price=max_price)
+
+
 
 @app.route('/product/<int:id>')
 def product_detail(id):
@@ -436,6 +492,8 @@ def update_profile():
     name = request.form.get('name')
     phone = request.form.get('phone')
     address = request.form.get('address')
+    shop_name = request.form.get('shop_name')
+    shop_description = request.form.get('shop_description')
     
     if name:
         current_user.name = name
@@ -443,10 +501,229 @@ def update_profile():
         current_user.phone = phone
     if address:
         current_user.address = address
+    if shop_name:
+        current_user.shop_name = shop_name
+    if shop_description:
+        current_user.shop_description = shop_description
     
     db.session.commit()
     flash('Profile updated successfully!', 'success')
     return redirect(url_for('profile'))
+
+@app.route('/become_seller', methods=['GET', 'POST'])
+@login_required
+def become_seller():
+    if current_user.role == 'seller':
+        return redirect(url_for('seller_dashboard'))
+    
+    if request.method == 'POST':
+        shop_name = request.form.get('shop_name')
+        shop_description = request.form.get('shop_description')
+        
+        if not shop_name:
+            flash('Shop name is required.', 'danger')
+            return render_template('become_seller.html')
+        
+        current_user.role = 'seller'
+        current_user.shop_name = shop_name
+        current_user.shop_description = shop_description
+        db.session.commit()
+        
+        flash('Congratulations! You are now a registered seller on Lifestyle Mart.', 'success')
+        return redirect(url_for('seller_dashboard'))
+        
+    return render_template('become_seller.html')
+
+# Seller Routes
+@app.route('/seller/dashboard')
+@seller_required
+def seller_dashboard():
+    products_count = Product.query.filter_by(seller_id=current_user.id).count()
+    # Simplified: Get all orders that contain products from this seller
+    # In a more complex system, we would have a separate SellerOrder model
+    seller_products = Product.query.filter_by(seller_id=current_user.id).all()
+    product_ids = [p.id for p in seller_products]
+    
+    # Get recent order items for this seller's products
+    recent_sales = OrderItem.query.filter(OrderItem.product_id.in_(product_ids)).order_by(OrderItem.id.desc()).limit(10).all()
+    
+    total_sales = sum(item.total for item in OrderItem.query.filter(OrderItem.product_id.in_(product_ids)).all())
+    
+    return render_template('seller/dashboard.html', 
+                         products_count=products_count,
+                         recent_sales=recent_sales,
+                         total_sales=total_sales)
+
+@app.route('/seller/products')
+@seller_required
+def seller_products():
+    page = request.args.get('page', 1, type=int)
+    products = Product.query.filter_by(seller_id=current_user.id).order_by(Product.created_at.desc()).paginate(page=page, per_page=10, error_out=False)
+    return render_template('seller/products.html', products=products)
+
+@app.route('/seller/products/add', methods=['GET', 'POST'])
+@seller_required
+def seller_add_product():
+    form = ProductForm()
+    form.category_id.choices = [(c.id, c.name) for c in Category.query.all()]
+    
+    if form.validate_on_submit():
+        product = Product(
+            name=form.name.data,
+            description=form.description.data,
+            category_id=form.category_id.data,
+            price=form.price.data,
+            stock=form.stock.data,
+            brand=form.brand.data,
+            image=form.image.data,
+            seller_id=current_user.id,
+            status='active'
+        )
+        db.session.add(product)
+        db.session.commit()
+        
+        flash('Product listed successfully!', 'success')
+        return redirect(url_for('seller_products'))
+    
+    return render_template('seller/product_form.html', form=form, title='Add New Product')
+
+@app.route('/seller/products/edit/<int:id>', methods=['GET', 'POST'])
+@seller_required
+def seller_edit_product(id):
+    product = Product.query.get_or_404(id)
+    # Security check: ensure the product belongs to this seller
+    if product.seller_id != current_user.id and current_user.role != 'admin':
+        flash('Unauthorized access.', 'danger')
+        return redirect(url_for('seller_products'))
+        
+    form = ProductForm(obj=product)
+    form.category_id.choices = [(c.id, c.name) for c in Category.query.all()]
+    
+    if form.validate_on_submit():
+        product.name = form.name.data
+        product.description = form.description.data
+        product.category_id = form.category_id.data
+        product.price = form.price.data
+        product.stock = form.stock.data
+        product.brand = form.brand.data
+        product.image = form.image.data
+        
+        db.session.commit()
+        flash('Product updated successfully!', 'success')
+        return redirect(url_for('seller_products'))
+    
+    return render_template('seller/product_form.html', form=form, title='Edit Product')
+
+@app.route('/seller/products/delete/<int:id>')
+@seller_required
+def seller_delete_product(id):
+    product = Product.query.get_or_404(id)
+    if product.seller_id != current_user.id and current_user.role != 'admin':
+        flash('Unauthorized access.', 'danger')
+        return redirect(url_for('seller_products'))
+        
+    db.session.delete(product)
+    db.session.commit()
+    flash('Product deleted successfully!', 'success')
+    return redirect(url_for('seller_products'))
+
+# Messaging Routes
+@app.route('/inbox')
+@login_required
+def inbox():
+    # Get all users the current user has messaged or received messages from
+    sent_to = db.session.query(Message.receiver_id).filter_by(sender_id=current_user.id)
+    received_from = db.session.query(Message.sender_id).filter_by(receiver_id=current_user.id)
+    
+    # Combine and get unique user IDs
+    user_ids = [uid[0] for uid in sent_to.union(received_from).all()]
+    
+    # Fetch user objects for these IDs
+    conversations = []
+    for uid in set(user_ids):
+        user = User.query.get(uid)
+        if user:
+            # Get the last message in this conversation
+            last_msg = Message.query.filter(
+                ((Message.sender_id == current_user.id) & (Message.receiver_id == uid)) |
+                ((Message.sender_id == uid) & (Message.receiver_id == current_user.id))
+            ).order_by(Message.created_at.desc()).first()
+            
+            conversations.append({
+                'user': user,
+                'last_message': last_msg
+            })
+            
+    # Sort conversations by last message time
+    conversations.sort(key=lambda x: x['last_message'].created_at if x['last_message'] else datetime.min, reverse=True)
+    
+    return render_template('chat.html', conversations=conversations, active_chat=None)
+
+@app.route('/chat/<int:user_id>')
+@login_required
+def chat(user_id):
+    other_user = User.query.get_or_404(user_id)
+    
+    # Mark messages from this user to me as read
+    Message.query.filter_by(sender_id=user_id, receiver_id=current_user.id, is_read=False).update({'is_read': True})
+    db.session.commit()
+    
+    # Get all messages in this conversation
+    messages = Message.query.filter(
+        ((Message.sender_id == current_user.id) & (Message.receiver_id == user_id)) |
+        ((Message.sender_id == user_id) & (Message.receiver_id == current_user.id))
+    ).order_by(Message.created_at.asc()).all()
+    
+    # Also get all conversations for the sidebar
+    sent_to = db.session.query(Message.receiver_id).filter_by(sender_id=current_user.id)
+    received_from = db.session.query(Message.sender_id).filter_by(receiver_id=current_user.id)
+    u_ids = [uid[0] for uid in sent_to.union(received_from).all()]
+    if user_id not in u_ids: u_ids.append(user_id) # ensure current chat is in list
+    
+    conversations = []
+    for uid in set(u_ids):
+        user = User.query.get(uid)
+        if user:
+            last_msg = Message.query.filter(
+                ((Message.sender_id == current_user.id) & (Message.receiver_id == uid)) |
+                ((Message.sender_id == uid) & (Message.receiver_id == current_user.id))
+            ).order_by(Message.created_at.desc()).first()
+            conversations.append({'user': user, 'last_message': last_msg})
+    
+    conversations.sort(key=lambda x: x['last_message'].created_at if x['last_message'] else datetime.min, reverse=True)
+    
+    return render_template('chat.html', conversations=conversations, active_chat=other_user, messages=messages)
+
+@app.route('/send_message', methods=['POST'])
+@login_required
+def send_message():
+    receiver_id = request.form.get('receiver_id', type=int)
+    content = request.form.get('content')
+    product_id = request.form.get('product_id', type=int)
+    
+    if not receiver_id or not content:
+        flash('Invalid message data.', 'danger')
+        return redirect(request.referrer or url_for('inbox'))
+    
+    receiver = User.query.get_or_404(receiver_id)
+    
+    message = Message(
+        sender_id=current_user.id,
+        receiver_id=receiver_id,
+        product_id=product_id,
+        content=content
+    )
+    db.session.add(message)
+    db.session.commit()
+    
+    return redirect(url_for('chat', user_id=receiver_id))
+
+@app.context_processor
+def inject_unread_messages_count():
+    if current_user.is_authenticated:
+        count = Message.query.filter_by(receiver_id=current_user.id, is_read=False).count()
+        return dict(unread_messages_count=count)
+    return dict(unread_messages_count=0)
 
 @app.route('/about')
 def about():

@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 # Add the current directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from app import app, db, User, Category, Product, Order, OrderItem, Review, FlashDeal, Offer, GiftCard
+from app import app, db, User, Category, Product, Order, OrderItem, Review, FlashDeal, Offer, GiftCard, Message
 from werkzeug.security import generate_password_hash
 import random
 import string
@@ -37,9 +37,45 @@ def create_sample_data():
             name='Admin User',
             email='admin@lifestylemart.com',
             password_hash=generate_password_hash('admin123'),
-            role='admin'
+            role='admin',
+            shop_name='Lifestyle Mart Official',
+            shop_description='The official store of Lifestyle Mart Bangladesh.'
         )
         db.session.add(admin)
+        
+        # Create official brand sellers
+        brand_sellers = {
+            'Bata': User(
+                name='Bata Official', email='bata@seller.bd', password_hash=generate_password_hash('seller123'),
+                role='seller', shop_name='Bata Official Store',
+                shop_description='Step into comfort with Bata, the leading footwear brand in Bangladesh.'
+            ),
+            'Aarong': User(
+                name='Aarong Official', email='aarong@seller.bd', password_hash=generate_password_hash('seller123'),
+                role='seller', shop_name='Aarong Official Store',
+                shop_description='Aarong is Bangladesh\'s leading lifestyle brand.'
+            ),
+            'Apex': User(
+                name='Apex Official', email='apex@seller.bd', password_hash=generate_password_hash('seller123'),
+                role='seller', shop_name='Apex Official Store',
+                shop_description='Apex is a leading footwear brand in Bangladesh.'
+            ),
+            'Yellow': User(
+                name='Yellow Official', email='yellow@seller.bd', password_hash=generate_password_hash('seller123'),
+                role='seller', shop_name='Yellow Official Store',
+                shop_description='Yellow is a leading fashion brand in Bangladesh.'
+            ),
+            'Walton': User(
+                name='Walton Official', email='walton@seller.bd', password_hash=generate_password_hash('seller123'),
+                role='seller', shop_name='Walton Official Store',
+                shop_description='Walton is a leading electronics brand in Bangladesh.'
+            )
+        }
+        
+        for s in brand_sellers.values():
+            db.session.add(s)
+        
+        db.session.commit()
         
         # Create sample categories
         categories = [
@@ -60,13 +96,13 @@ def create_sample_data():
         products = [
             # Men's Fashion (Category 1) - 8 products
             {
-                'name': 'Premium Cotton T-Shirt',
-                'description': 'Premium quality 100% cotton t-shirt. Features a comfortable fit, breathable fabric, and durable stitching. Perfect for everyday wear.',
+                'name': 'Yellow Men\'s Polo Shirt',
+                'description': 'Premium quality cotton polo shirt from Yellow. Features a comfortable fit, breathable fabric, and durable stitching. Perfect for casual and semi-formal wear.',
                 'category_id': 1,
-                'price': 1200,
+                'price': 1500,
                 'stock': 50,
-                'brand': 'Fashion Hub',
-                'image': 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+                'brand': 'Yellow',
+                'image': 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
                 'is_featured': True
             },
             {
@@ -172,13 +208,13 @@ def create_sample_data():
                 'is_featured': False
             },
             {
-                'name': 'Women\'s Kurti',
-                'description': 'Traditional Bangladeshi kurti with modern design. Comfortable cotton fabric with beautiful embroidery.',
+                'name': 'Aarong Cotton Kurti',
+                'description': 'Traditional Bangladeshi kurti from Aarong with modern design. Comfortable cotton fabric with beautiful embroidery and ethnic motifs.',
                 'category_id': 2,
-                'price': 1800,
+                'price': 2200,
                 'stock': 40,
-                'brand': 'Desi Fashion',
-                'image': 'https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+                'brand': 'Aarong',
+                'image': 'https://images.unsplash.com/photo-1708534246055-d7b149acb731?q=80&w=800&auto=format&fit=crop',
                 'is_featured': True
             },
             {
@@ -192,12 +228,12 @@ def create_sample_data():
                 'is_featured': False
             },
             {
-                'name': 'Women\'s Tops',
-                'description': 'Casual everyday tops in various colors. Soft cotton blend for maximum comfort.',
+                'name': 'Le Reve Women\'s Top',
+                'description': 'Trendy women\'s top from Le Reve. Made from premium rayon fabric with stylish print and comfortable fit.',
                 'category_id': 2,
-                'price': 1200,
+                'price': 1450,
                 'stock': 50,
-                'brand': 'Daily Wear',
+                'brand': 'Le Reve',
                 'image': 'https://images.unsplash.com/photo-1564257631407-4deb1f99d992?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
                 'is_featured': False
             },
@@ -254,13 +290,13 @@ def create_sample_data():
                 'is_featured': True
             },
             {
-                'name': 'Formal Leather Shoes',
-                'description': 'Premium leather formal shoes for office wear. Classic design with comfortable fit.',
+                'name': 'Apex Premium Leather Oxfords',
+                'description': 'Premium leather formal shoes from Apex. Classic Oxford design with comfortable sole and elegant finish.',
                 'category_id': 3,
-                'price': 3200,
+                'price': 4500,
                 'stock': 20,
-                'brand': 'Leather Craft',
-                'image': 'https://images.unsplash.com/photo-1614252369475-531eba835eb1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+                'brand': 'Apex',
+                'image': 'https://images.unsplash.com/photo-1677203006929-fd0d9f4f350d?q=80&w=800&auto=format&fit=crop',
                 'is_featured': False
             },
             {
@@ -296,13 +332,13 @@ def create_sample_data():
                 'is_featured': True
             },
             {
-                'name': 'Fashion Watch',
-                'description': 'Stylish analog watch with genuine leather strap. Perfect accessory for any occasion.',
+                'name': 'Walton Tick Smartwatch',
+                'description': 'Advanced smartwatch from Walton with fitness tracking, heart rate monitor, and long battery life. Sleek and modern design.',
                 'category_id': 4,
-                'price': 2800,
+                'price': 3200,
                 'stock': 30,
-                'brand': 'TimeStyle',
-                'image': 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+                'brand': 'Walton',
+                'image': 'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
                 'is_featured': True
             },
             {
@@ -492,7 +528,14 @@ def create_sample_data():
         ]
         
         for product_data in products:
-            product = Product(**product_data)
+            # Map products to their brand sellers or default to admin
+            brand_name = product_data.get('brand', '')
+            product_seller = brand_sellers.get(brand_name, admin)
+            
+            product = Product(
+                **product_data,
+                seller_id=product_seller.id
+            )
             db.session.add(product)
         
         db.session.commit()
@@ -685,6 +728,42 @@ def create_sample_data():
                     review_count += 1
         
         db.session.commit()
+        
+        # Create sample messages
+        john = User.query.filter_by(email='john@example.com').first()
+        apex_seller = User.query.filter_by(email='apex@seller.bd').first()
+        
+        if john and apex_seller:
+            messages = [
+                {
+                    'sender_id': john.id,
+                    'receiver_id': apex_seller.id,
+                    'content': 'Hello, do you have these leather oxfords in size 42?',
+                    'is_read': False,
+                    'created_at': now - timedelta(hours=5)
+                },
+                {
+                    'sender_id': apex_seller.id,
+                    'receiver_id': john.id,
+                    'content': 'Yes, we have size 42 in stock! They are our best-sellers.',
+                    'is_read': True,
+                    'created_at': now - timedelta(hours=4)
+                },
+                {
+                    'sender_id': john.id,
+                    'receiver_id': apex_seller.id,
+                    'content': 'Great! I will place an order now.',
+                    'is_read': False,
+                    'created_at': now - timedelta(hours=3)
+                }
+            ]
+            
+            for msg_data in messages:
+                msg = Message(**msg_data)
+                db.session.add(msg)
+            
+            db.session.commit()
+            print(f"[INFO] Created {len(messages)} sample messages")
         
         print("\n" + "="*60)
         print("[OK] Database setup completed successfully!")
