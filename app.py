@@ -14,7 +14,12 @@ from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 import os
 import secrets
+from dotenv import load_dotenv
 from functools import wraps
+from payment_gateway import SSLCommerzGateway
+
+load_dotenv()
+payment_gateway = SSLCommerzGateway()
 
 # Configuration
 class Config:
@@ -120,6 +125,10 @@ class Order(db.Model):
     is_gift = db.Column(db.Boolean, default=False)
     gift_message = db.Column(db.Text)
     gift_wrap = db.Column(db.Boolean, default=False)
+    
+    # Payment Gateway fields
+    transaction_id = db.Column(db.String(100), unique=True)
+    val_id = db.Column(db.String(100))
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -246,7 +255,7 @@ class PaymentForm(FlaskForm):
                                         ('card', 'Credit/Debit Card'),
                                         ('gift_card', 'Gift Card')],
                                 validators=[DataRequired()])
-    phone_number = StringField('Phone Number', validators=[DataRequired(), Length(min=11, max=11)])
+    phone_number = StringField('Phone Number')  # optional - pulled from user profile
     transaction_id = StringField('Transaction ID (for bKash/Nagad)')
     card_number = StringField('Card Number')
     card_expiry = StringField('Expiry Date (MM/YY)')
@@ -303,7 +312,11 @@ def generate_order_number():
 def index():
     products = Product.query.filter_by(is_featured=True, status='active').limit(8).all()
     categories = Category.query.limit(6).all()
-    return render_template('index.html', products=products, categories=categories)
+    # Get active flash deals
+    flash_deals = FlashDeal.query.filter_by(is_active=True).filter(
+        FlashDeal.end_time > datetime.utcnow()
+    ).order_by(FlashDeal.end_time.asc()).limit(4).all()
+    return render_template('index.html', products=products, categories=categories, flash_deals=flash_deals)
 
 @app.route('/shop')
 def shop():
@@ -311,6 +324,8 @@ def shop():
     category_id = request.args.get('category', type=int)
     search = request.args.get('search', '')
     sort = request.args.get('sort', 'name')
+    min_price = request.args.get('min_price', type=float)
+    max_price = request.args.get('max_price', type=float)
     
     query = Product.query.filter_by(status='active')
     
@@ -319,6 +334,12 @@ def shop():
     
     if search:
         query = query.filter(Product.name.contains(search) | Product.description.contains(search))
+    
+    if min_price is not None:
+        query = query.filter(Product.price >= min_price)
+    
+    if max_price is not None:
+        query = query.filter(Product.price <= max_price)
     
     if sort == 'price_low':
         query = query.order_by(Product.price.asc())
@@ -333,7 +354,8 @@ def shop():
     categories = Category.query.all()
     
     return render_template('shop.html', products=products, categories=categories, 
-                         category_id=category_id, search=search, sort=sort)
+                         category_id=category_id, search=search, sort=sort,
+                         min_price=min_price, max_price=max_price)
 
 @app.route('/product/<int:id>')
 def product_detail(id):
@@ -504,16 +526,72 @@ def update_cart():
         if product and product.stock >= quantity:
             cart[product_id] = quantity
         else:
-            return jsonify({'success': False, 'message': 'Not enough stock available'})
+            if request.headers.get('Accept') and 'application/json' in request.headers.get('Accept', ''):
+                return jsonify({'success': False, 'message': 'Not enough stock available'})
+            flash('Not enough stock available', 'warning')
+            return redirect(url_for('cart'))
     else:
         cart.pop(product_id, None)
     
     session['cart'] = cart
     
-    return jsonify({
-        'success': True,
-        'cart_count': sum(cart.values())
-    })
+    if request.headers.get('Accept') and 'application/json' in request.headers.get('Accept', ''):
+        return jsonify({
+            'success': True,
+            'cart_count': sum(cart.values())
+        })
+    return redirect(url_for('cart'))
+
+@app.route('/apply_promo', methods=['POST'])
+def apply_promo():
+    code = request.form.get('promo_code', '').strip().upper()
+    offer = Offer.query.filter_by(code=code, is_active=True).first()
+    
+    if not offer:
+        flash('Invalid or expired promo code.', 'danger')
+        return redirect(url_for('cart'))
+        
+    if offer.end_date < datetime.utcnow():
+        flash('This promo code has expired.', 'danger')
+        return redirect(url_for('cart'))
+        
+    # Calculate cart total
+    cart_items = session.get('cart', {})
+    total = 0
+    for pid, qty in cart_items.items():
+        product = Product.query.get(pid)
+        if product:
+            total += product.price * qty
+            
+    if total < offer.min_purchase:
+        flash(f'Minimum purchase of ৳{offer.min_purchase} required for this promo.', 'warning')
+        return redirect(url_for('cart'))
+        
+    # Calculate discount
+    discount = 0
+    if offer.discount_type == 'percentage':
+        discount = total * (offer.discount_value / 100)
+        if offer.max_discount:
+            discount = min(discount, offer.max_discount)
+    else:
+        discount = min(offer.discount_value, total)
+        
+    session['promo_code'] = code
+    session['promo_discount'] = discount
+    flash(f'Promo code applied successfully!', 'success')
+    return redirect(url_for('cart'))
+
+@app.route('/remove_promo')
+def remove_promo():
+    session.pop('promo_code', None)
+    session.pop('promo_discount', None)
+    flash('Promo code removed.', 'info')
+    return redirect(url_for('cart'))
+
+@app.route('/cart_count')
+def cart_count():
+    cart = session.get('cart', {})
+    return jsonify({'count': sum(cart.values())})
 
 @app.route('/remove_from_cart', methods=['POST'])
 def remove_from_cart():
@@ -522,10 +600,13 @@ def remove_from_cart():
     cart.pop(product_id, None)
     session['cart'] = cart
     
-    return jsonify({
-        'success': True,
-        'cart_count': sum(cart.values())
-    })
+    if request.headers.get('Accept') and 'application/json' in request.headers.get('Accept', ''):
+        return jsonify({
+            'success': True,
+            'cart_count': sum(cart.values())
+        })
+    flash('Item removed from cart', 'info')
+    return redirect(url_for('cart'))
 
 @app.route('/wishlist')
 @login_required
@@ -624,8 +705,15 @@ def checkout():
             elif is_gift and gift_wrap:
                 delivery_cost += 50   # Gift wrapping fee
             
-            final_total = total_amount - gift_card_amount + delivery_cost
+            tax = total_amount * 0.15
+            promo_discount = session.get('promo_discount', 0)
             
+            final_total = total_amount + tax - promo_discount - gift_card_amount + delivery_cost
+            
+            notes = request.form.get('notes', '')
+            if session.get('promo_code'):
+                notes += f" [Promo Code Applied: {session.get('promo_code')}]"
+
             order = Order(
                 user_id=current_user.id,
                 order_number=order_number,
@@ -633,15 +721,15 @@ def checkout():
                 shipping_address=request.form.get('shipping_address'),
                 billing_address=request.form.get('billing_address') or request.form.get('shipping_address'),
                 payment_method=form.payment_method.data,
-                payment_status='paid' if form.payment_method.data != 'cod' else 'pending',
-                notes=request.form.get('notes'),
+                payment_status='pending', # Always pending until gateway callback
+                notes=notes,
                 delivery_type=delivery_type,
                 gift_card_code=form.gift_card_code.data,
                 gift_card_amount=gift_card_amount,
                 is_gift=is_gift,
                 gift_message=request.form.get('gift_message'),
                 gift_wrap=gift_wrap,
-                estimated_delivery=datetime.utcnow + (timedelta(days=1) if delivery_type == 'express' else timedelta(days=3))
+                estimated_delivery=datetime.utcnow() + (timedelta(days=1) if delivery_type == 'express' else timedelta(days=3))
             )
             db.session.add(order)
             db.session.flush()
@@ -662,6 +750,16 @@ def checkout():
             # Clear cart
             session['cart'] = {}
             
+            # If not COD, redirect to payment gateway
+            if form.payment_method.data != 'cod':
+                host_url = request.host_url.rstrip('/')
+                gateway_url = payment_gateway.initiate_payment(order, current_user, host_url)
+                
+                if gateway_url:
+                    return redirect(gateway_url)
+                else:
+                    flash('Failed to connect to payment gateway. Your order is placed as "Pending Payment".', 'warning')
+            
             flash(f'Order {order_number} placed successfully!', 'success')
             return redirect(url_for('order_confirmation', id=order.id))
     
@@ -673,6 +771,100 @@ def checkout():
             total += product.price * quantity
     
     return render_template('checkout.html', form=form, total=total, cart_items=len(cart))
+
+# Payment Gateway Callback Routes
+@app.route('/payment/success', methods=['POST'])
+def payment_success():
+    # SSLCommerz sends data via POST
+    data = request.form
+    tran_id = data.get('tran_id')
+    val_id = data.get('val_id')
+    
+    order = Order.query.filter_by(order_number=tran_id).first_or_404()
+    
+    # Validate payment with SSLCommerz server
+    if payment_gateway.validate_payment(val_id):
+        order.payment_status = 'paid'
+        order.val_id = val_id
+        db.session.commit()
+        flash(f'Payment successful for order {tran_id}!', 'success')
+    else:
+        flash(f'Payment validation failed for order {tran_id}.', 'danger')
+        
+    return redirect(url_for('order_confirmation', id=order.id))
+
+@app.route('/payment/fail', methods=['POST'])
+def payment_fail():
+    tran_id = request.form.get('tran_id')
+    order = Order.query.filter_by(order_number=tran_id).first()
+    if order:
+        order.payment_status = 'failed'
+        db.session.commit()
+        flash(f'Payment failed for order {tran_id}. Please try again.', 'danger')
+    return redirect(url_for('cart'))
+
+@app.route('/payment/cancel', methods=['POST'])
+def payment_cancel():
+    tran_id = request.form.get('tran_id')
+    flash(f'Payment cancelled for order {tran_id}.', 'warning')
+    return redirect(url_for('cart'))
+
+@app.route('/payment/ipn', methods=['POST'])
+def payment_ipn():
+    # Instant Payment Notification (Asynchronous)
+    data = request.form
+    tran_id = data.get('tran_id')
+    val_id = data.get('val_id')
+    status = data.get('status')
+    
+    order = Order.query.filter_by(order_number=tran_id).first()
+    if order and status == 'VALID':
+        if payment_gateway.validate_payment(val_id):
+            order.payment_status = 'paid'
+            order.val_id = val_id
+            db.session.commit()
+            
+    return jsonify({'status': 'received'})
+
+@app.route('/payment/simulate/<order_number>')
+@login_required
+def simulate_payment(order_number):
+    """A simple page to simulate the SSLCommerz gateway UI."""
+    order = Order.query.filter_by(order_number=order_number).first_or_404()
+    if order.user_id != current_user.id:
+        return redirect(url_for('index'))
+        
+    return render_template('simulate_payment.html', order=order)
+
+@app.route('/payment/process_simulation', methods=['POST'])
+@login_required
+def process_simulation():
+    """Handles the form submission from the simulation page."""
+    order_number = request.form.get('order_number')
+    status = request.form.get('status')
+    
+    order = Order.query.filter_by(order_number=order_number).first_or_404()
+    
+    if status == 'success':
+        # Mocking the POST data SSLCommerz would send
+        from werkzeug.datastructures import ImmutableMultiDict
+        mock_data = ImmutableMultiDict([
+            ('tran_id', order_number),
+            ('val_id', f'VAL-{secrets.token_hex(8)}'),
+            ('status', 'VALID')
+        ])
+        
+        # We can't easily redirect with a POST method to our own route from here
+        # so we'll just handle the logic directly or simulate a client-side form POST.
+        # For simplicity in this demo, let's just update the order directly.
+        order.payment_status = 'paid'
+        order.val_id = f'MOCK-VAL-{secrets.token_hex(4)}'
+        db.session.commit()
+        flash(f'Payment successful (Simulated)!', 'success')
+        return redirect(url_for('order_confirmation', id=order.id))
+    else:
+        flash(f'Payment failed (Simulated).', 'danger')
+        return redirect(url_for('cart'))
 
 @app.route('/add_review/<int:product_id>', methods=['POST'])
 @login_required
@@ -1035,6 +1227,103 @@ def admin_reject_review(id):
     flash('Review rejected successfully!', 'success')
     return redirect(url_for('admin_reviews'))
 
+@app.route('/apply-promo', methods=['POST'])
+@login_required
+def apply_promo_old():
+    code = request.form.get('promo_code', '').upper()
+    order_id = request.form.get('order_id', type=int)
+    
+    if not code:
+        flash('Please enter a promo code', 'danger')
+        return redirect(url_for('checkout'))
+    
+    # Find active offer
+    offer = Offer.query.filter_by(code=code, is_active=True).first()
+    
+    if not offer:
+        flash('Invalid promo code', 'danger')
+        return redirect(url_for('checkout'))
+    
+    # Check if offer is expired
+    if offer.end_date < datetime.utcnow():
+        flash('This promo code has expired', 'danger')
+        return redirect(url_for('checkout'))
+    
+    # Get cart total
+    cart = session.get('cart', {})
+    cart_total = sum(item['price'] * item['quantity'] for item in cart.values())
+    
+    # Check minimum purchase
+    if cart_total < offer.min_purchase:
+        flash(f'Minimum purchase of ৳{offer.min_purchase:.0f} required for this code', 'danger')
+        return redirect(url_for('checkout'))
+    
+    # Calculate discount
+    if offer.discount_type == 'percentage':
+        discount = cart_total * (offer.discount_value / 100)
+        if offer.max_discount and discount > offer.max_discount:
+            discount = offer.max_discount
+    else:
+        discount = offer.discount_value
+    
+    # Store promo in session
+    session['promo_code'] = code
+    session['promo_discount'] = float(discount)
+    
+    flash(f'Promo code applied! You saved ৳{discount:.0f}', 'success')
+    return redirect(url_for('checkout'))
+
+@app.route('/remove-promo')
+@login_required
+def remove_promo_old():
+    session.pop('promo_code', None)
+    session.pop('promo_discount', None)
+    flash('Promo code removed', 'info')
+    return redirect(url_for('checkout'))
+
+@app.route('/apply-gift-card', methods=['POST'])
+@login_required
+def apply_gift_card():
+    code = request.form.get('gift_card_code', '').upper()
+    
+    if not code:
+        flash('Please enter a gift card code', 'danger')
+        return redirect(url_for('checkout'))
+    
+    # Find gift card
+    gift_card = GiftCard.query.filter_by(code=code).first()
+    
+    if not gift_card:
+        flash('Invalid gift card code', 'danger')
+        return redirect(url_for('checkout'))
+    
+    if gift_card.is_redeemed:
+        flash('This gift card has already been redeemed', 'danger')
+        return redirect(url_for('checkout'))
+    
+    if gift_card.expiry_date and gift_card.expiry_date < datetime.utcnow():
+        flash('This gift card has expired', 'danger')
+        return redirect(url_for('checkout'))
+    
+    if gift_card.balance <= 0:
+        flash('This gift card has no remaining balance', 'danger')
+        return redirect(url_for('checkout'))
+    
+    # Store gift card in session
+    session['gift_card_code'] = code
+    session['gift_card_balance'] = float(gift_card.balance)
+    
+    flash(f'Gift card applied! Balance: ৳{gift_card.balance:.0f}', 'success')
+    return redirect(url_for('checkout'))
+
+@app.route('/remove-gift-card')
+@login_required
+def remove_gift_card():
+    session.pop('gift_card_code', None)
+    session.pop('gift_card_balance', None)
+    flash('Gift card removed', 'info')
+    return redirect(url_for('checkout'))
+
 # Error handlers
 @app.errorhandler(404)
 def not_found_error(error):
@@ -1055,6 +1344,16 @@ def create_tables():
         db.create_all()
         created = True
 
+@app.errorhandler(404)
+def not_found(e):
+    return render_template('500.html'), 404
+
+@app.errorhandler(500)
+def server_error(e):
+    import traceback
+    traceback.print_exc()
+    return render_template('500.html'), 500
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(debug=False, host='0.0.0.0', port=port)
+    app.run(debug=True, host='0.0.0.0', port=port)

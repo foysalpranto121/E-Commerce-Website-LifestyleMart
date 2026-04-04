@@ -235,34 +235,50 @@
 <section class="daraz-section">
     <div class="container">
         <div class="daraz-section-header">
-            <h2 class="daraz-section-title">Flash Deals</h2>
+            <h2 class="daraz-section-title"><i class="fas fa-bolt" style="color: #f85606;"></i> Flash Deals</h2>
             <a href="{{ url_for('shop') }}" class="daraz-view-all">View All</a>
         </div>
         <div class="daraz-flash-grid">
+            {% for deal in flash_deals %}
+            <div class="daraz-flash-card">
+                <a href="{{ url_for('product_detail', id=deal.product.id) }}">
+                    <img src="{{ deal.product.image }}" alt="{{ deal.product.name }}" loading="lazy">
+                    <h6>{{ deal.product.name }}</h6>
+                    <span class="daraz-original-price">৳{{ "%.0f"|format(deal.original_price) }}</span>
+                    <div class="daraz-discount-price">৳{{ "%.0f"|format(deal.deal_price) }}</div>
+                    <div class="daraz-discount-badge">-{{ deal.discount_percent }}%</div>
+                </a>
+            </div>
+            {% else %}
             <div class="daraz-flash-card">
                 <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Premium Cotton T-Shirt">
                 <h6>Premium Cotton T-Shirt</h6>
-                <span class="daraz-original-price">৳1,500</span>
-                <div class="daraz-discount-price">৳750</div>
+                <span class="daraz-original-price">৳1,200</span>
+                <div class="daraz-discount-price">৳840</div>
+                <div class="daraz-discount-badge">-30%</div>
             </div>
             <div class="daraz-flash-card">
                 <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Red Running Shoes">
                 <h6>Red Running Shoes</h6>
-                <span class="daraz-original-price">৳4,500</span>
-                <div class="daraz-discount-price">৳2,700</div>
+                <span class="daraz-original-price">৳3,500</span>
+                <div class="daraz-discount-price">৳2,800</div>
+                <div class="daraz-discount-badge">-20%</div>
             </div>
             <div class="daraz-flash-card">
                 <img src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Leather Handbag">
                 <h6>Leather Handbag</h6>
-                <span class="daraz-original-price">৳3,500</span>
-                <div class="daraz-discount-price">৳2,100</div>
+                <span class="daraz-original-price">৳4,200</span>
+                <div class="daraz-discount-price">৳3,150</div>
+                <div class="daraz-discount-badge">-25%</div>
             </div>
             <div class="daraz-flash-card">
-                <img src="https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Elegant Summer Dress">
-                <h6>Elegant Summer Dress</h6>
+                <img src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Women's Heels">
+                <h6>Women's Heels</h6>
                 <span class="daraz-original-price">৳2,800</span>
-                <div class="daraz-discount-price">৳1,680</div>
+                <div class="daraz-discount-price">৳1,820</div>
+                <div class="daraz-discount-badge">-35%</div>
             </div>
+            {% endfor %}
         </div>
     </div>
 </section>
@@ -299,6 +315,116 @@
                 <div class="daraz-category-icon"><i class="fas fa-couch"></i></div>
                 <h6>Home & Living</h6>
             </a>
+        </div>
+    </div>
+</section>
+
+<!-- BD Brands Spotlight Section -->
+<section class="daraz-section bg-light py-5">
+    <div class="container">
+        <div class="daraz-section-header mb-4">
+            <h2 class="daraz-section-title">
+                <i class="fas fa-star text-success me-2"></i>BD Brands Spotlight
+            </h2>
+            <a href="{{ url_for('shop') }}?search=brand" class="daraz-view-all">Support Local Brands</a>
+        </div>
+        <div class="row align-items-center mb-4 text-center">
+            <div class="col-12">
+                <p class="text-muted">Discover premium quality products from Bangladesh's top national brands.</p>
+            </div>
+            <div class="col-12 d-flex justify-content-center gap-4 flex-wrap mt-3">
+                <span class="badge bg-white text-dark border p-3 rounded shadow-sm fw-bold fs-6">Aarong</span>
+                <span class="badge bg-white text-dark border p-3 rounded shadow-sm fw-bold fs-6">Apex</span>
+                <span class="badge bg-white text-dark border p-3 rounded shadow-sm fw-bold fs-6">Yellow</span>
+                <span class="badge bg-white text-dark border p-3 rounded shadow-sm fw-bold fs-6">Walton</span>
+                <span class="badge bg-white text-dark border p-3 rounded shadow-sm fw-bold fs-6">Le Reve</span>
+            </div>
+        </div>
+        
+        <div class="daraz-products-grid">
+            {% set bd_count = namespace(value=0) %}
+            {% for product in products %}
+                {% if product.brand in ['Aarong', 'Apex', 'Yellow', 'Walton', 'Le Reve'] %}
+                    {% if bd_count.value < 4 %}
+            <div class="daraz-product-card position-relative">
+                <span class="position-absolute top-0 end-0 bg-danger text-white px-2 py-1 m-2 rounded small fw-bold shadow-sm" style="z-index:10;"><i class="fas fa-tag me-1"></i>PROMO: LIFESTYLE50</span>
+                <div class="daraz-product-image position-relative">
+                    <span class="position-absolute top-0 start-0 bg-success text-white px-2 py-1 m-2 rounded small" style="z-index:10;"><i class="fas fa-check-circle me-1"></i>{{ product.brand|default('Local Brand') }}</span>
+                    <img src="{{ product.image or 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' }}" alt="{{ product.name }}">
+                </div>
+                <div class="daraz-product-info">
+                    <h6 class="daraz-product-title">{{ product.name }}</h6>
+                    <div class="daraz-product-price">৳{{ "%.0f"|format(product.price) }}</div>
+                    <div class="daraz-stars">
+                        <i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="far fa-star text-warning"></i>
+                    </div>
+                    <form action="{{ url_for('add_to_cart') }}" method="POST">
+                        <input type="hidden" name="product_id" value="{{ product.id }}">
+                        <input type="hidden" name="quantity" value="1">
+                        <button type="submit" class="daraz-btn-cart">Add to Cart</button>
+                    </form>
+                </div>
+            </div>
+                    {% set bd_count.value = bd_count.value + 1 %}
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+            
+            {% if bd_count.value == 0 %}
+            <!-- Demo placeholders if no products exist -->
+            <div class="daraz-product-card position-relative">
+                <span class="position-absolute top-0 end-0 bg-danger text-white px-2 py-1 m-2 rounded small fw-bold shadow-sm" style="z-index:10;"><i class="fas fa-tag me-1"></i>USE: LIFESTYLE50</span>
+                <div class="daraz-product-image position-relative">
+                    <span class="position-absolute top-0 start-0 bg-success text-white px-2 py-1 m-2 rounded small" style="z-index:10;"><i class="fas fa-check-circle me-1"></i>Aarong</span>
+                    <img src="https://images.unsplash.com/photo-1583391733958-6c782781878d?auto=format&fit=crop&w=800&q=80" alt="Traditional Kurti">
+                </div>
+                <div class="daraz-product-info">
+                    <h6 class="daraz-product-title">Traditional Cotton Kurti</h6>
+                    <div class="daraz-product-price">৳2,200</div>
+                    <div class="daraz-stars"><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star-half-alt text-warning"></i></div>
+                    <button class="daraz-btn-cart">View Product</button>
+                </div>
+            </div>
+            <div class="daraz-product-card position-relative">
+                <span class="position-absolute top-0 end-0 bg-danger text-white px-2 py-1 m-2 rounded small fw-bold shadow-sm" style="z-index:10;"><i class="fas fa-tag me-1"></i>USE: LIFESTYLE50</span>
+                <div class="daraz-product-image position-relative">
+                    <span class="position-absolute top-0 start-0 bg-success text-white px-2 py-1 m-2 rounded small" style="z-index:10;"><i class="fas fa-check-circle me-1"></i>Apex</span>
+                    <img src="https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=800&q=80" alt="Leather Shoes">
+                </div>
+                <div class="daraz-product-info">
+                    <h6 class="daraz-product-title">Premium Leather Oxfords</h6>
+                    <div class="daraz-product-price">৳4,500</div>
+                    <div class="daraz-stars"><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i></div>
+                    <button class="daraz-btn-cart">View Product</button>
+                </div>
+            </div>
+            <div class="daraz-product-card position-relative">
+                <span class="position-absolute top-0 end-0 bg-danger text-white px-2 py-1 m-2 rounded small fw-bold shadow-sm" style="z-index:10;"><i class="fas fa-tag me-1"></i>USE: LIFESTYLE50</span>
+                <div class="daraz-product-image position-relative">
+                    <span class="position-absolute top-0 start-0 bg-success text-white px-2 py-1 m-2 rounded small" style="z-index:10;"><i class="fas fa-check-circle me-1"></i>Yellow</span>
+                    <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=800&q=80" alt="Casual Men's Shirt">
+                </div>
+                <div class="daraz-product-info">
+                    <h6 class="daraz-product-title">Casual Men's Shirt</h6>
+                    <div class="daraz-product-price">৳1,800</div>
+                    <div class="daraz-stars"><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="far fa-star text-warning"></i></div>
+                    <button class="daraz-btn-cart">View Product</button>
+                </div>
+            </div>
+            <div class="daraz-product-card position-relative">
+                <span class="position-absolute top-0 end-0 bg-danger text-white px-2 py-1 m-2 rounded small fw-bold shadow-sm" style="z-index:10;"><i class="fas fa-tag me-1"></i>USE: LIFESTYLE50</span>
+                <div class="daraz-product-image position-relative">
+                    <span class="position-absolute top-0 start-0 bg-success text-white px-2 py-1 m-2 rounded small" style="z-index:10;"><i class="fas fa-check-circle me-1"></i>Walton</span>
+                    <img src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=800&q=80" alt="Smartwatch">
+                </div>
+                <div class="daraz-product-info">
+                    <h6 class="daraz-product-title">Walton Tick Smartwatch</h6>
+                    <div class="daraz-product-price">৳3,200</div>
+                    <div class="daraz-stars"><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i class="fas fa-star-half-alt text-warning"></i></div>
+                    <button class="daraz-btn-cart">View Product</button>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 </section>

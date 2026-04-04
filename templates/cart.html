@@ -265,26 +265,41 @@
                     <h5 class="mb-4">Order Summary</h5>
                     
                     <!-- Promo Code -->
-                    <div class="promo-code">
-                        <input type="text" placeholder="Promo code" class="form-control">
-                        <button type="button">Apply</button>
+                    <form action="{{ url_for('apply_promo') }}" method="POST" class="promo-code mb-3">
+                        <input type="text" name="promo_code" placeholder="Enter Promo code" class="form-control" value="{{ session.get('promo_code', '') }}" required>
+                        <button type="submit">Apply</button>
+                    </form>
+                    {% if session.get('promo_code') %}
+                    <div class="alert alert-success py-2 mt-2 small d-flex justify-content-between align-items-center shadow-sm" style="border-radius: 8px;">
+                        <span><i class="fas fa-check-circle me-1"></i> Code <strong>{{ session.get('promo_code') }}</strong> applied!</span>
+                        <a href="{{ url_for('remove_promo') }}" class="text-danger"><i class="fas fa-times-circle"></i></a>
                     </div>
+                    {% endif %}
 
-                    <div class="summary-row">
+                    <div class="summary-row mt-3">
                         <span>Subtotal ({{ products|length }} items)</span>
                         <span>৳{{ "%.2f"|format(total) }}</span>
                     </div>
+                    {% set delivery_fee = 50 %}
                     <div class="summary-row">
                         <span>Shipping Fee</span>
-                        <span id="shipping-fee">৳50.00</span>
+                        <span id="shipping-fee">৳{{ "%.2f"|format(delivery_fee) }}</span>
                     </div>
+                    {% set tax = total * 0.15 %}
                     <div class="summary-row">
                         <span>Tax (VAT 15%)</span>
-                        <span id="tax">৳{{ "%.2f"|format(total * 0.15) }}</span>
+                        <span id="tax">৳{{ "%.2f"|format(tax) }}</span>
                     </div>
+                    {% set promo_discount = session.get('promo_discount', 0) %}
+                    {% if promo_discount > 0 %}
+                    <div class="summary-row text-success">
+                        <span>Promo Discount</span>
+                        <span>-৳{{ "%.2f"|format(promo_discount) }}</span>
+                    </div>
+                    {% endif %}
                     <div class="summary-row">
                         <span class="summary-total">Total</span>
-                        <span class="summary-total" id="grand-total">৳{{ "%.2f"|format(total + 50 + (total * 0.15)) }}</span>
+                        <span class="summary-total" id="grand-total">৳{{ "%.2f"|format(total + delivery_fee + tax - promo_discount) }}</span>
                     </div>
 
                     <a href="{{ url_for('checkout') }}" class="btn-checkout">
