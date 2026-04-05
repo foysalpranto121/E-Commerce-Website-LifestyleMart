@@ -638,15 +638,21 @@
 
     <!-- Back to Top Button -->
     <button id="backToTop" class="btn btn-warning rounded-circle position-fixed" 
-            style="bottom: 30px; right: 30px; width: 50px; height: 50px; display: none; z-index: 1000;">
+            style="bottom: 100px; right: 30px; width: 46px; height: 46px; display: none; z-index: 1001; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
         <i class="fas fa-arrow-up"></i>
     </button>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Custom JavaScript -->
+
+    <!-- Main JS (AJAX Cart, Cart Count, UI) -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <!-- AI Assistant Widget -->
+    {% include 'assistant_widget.html' %}
+    
+    <!-- AI Assistant JavaScript -->
+    <script src="{{ url_for('static', filename='js/assistant.js') }}"></script>
     
     {% block extra_js %}{% endblock %}
 </body>

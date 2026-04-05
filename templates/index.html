@@ -217,6 +217,20 @@
     cursor: pointer;
     width: 100%;
 }
+
+.daraz-eco-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #28a745;
+    color: white;
+    padding: 3px 12px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    z-index: 10;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
 </style>
 
 <!-- Hero Section -->
@@ -480,6 +494,46 @@
     </div>
 </section>
 
+<!-- Green Choice Spotlight Section -->
+<section class="daraz-section" style="background: #f0fff1; border-top: 4px solid #28a745;">
+    <div class="container">
+        <div class="daraz-section-header">
+            <h2 class="daraz-section-title" style="color: #1a5928;">
+                <i class="fas fa-leaf text-success me-2"></i>Green Choice Spotlight
+            </h2>
+            <a href="{{ url_for('shop') }}?eco_friendly=1" class="daraz-view-all" style="color: #1a5928;">View Sustainable Collection</a>
+        </div>
+        <p class="px-3 text-muted">Ethically sourced, eco-friendly products for a better tomorrow.</p>
+        
+        <div class="daraz-products-grid">
+            {% for product in eco_products %}
+            <div class="daraz-product-card position-relative shadow-sm" style="border: 2px solid #e1f5e3;">
+                <div class="daraz-eco-badge"><i class="fas fa-leaf"></i> Eco</div>
+                <div class="daraz-product-image">
+                    <img src="{{ product.image or 'https://images.unsplash.com/photo-1542272604-787c3839105e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' }}" alt="{{ product.name }}">
+                </div>
+                <div class="daraz-product-info">
+                    <h6 class="daraz-product-title">{{ product.name }}</h6>
+                    <p class="small text-success mb-2"><i class="fas fa-certificate me-1"></i>{{ product.eco_description|default('Sustainably sourced product')|truncate(60) }}</p>
+                    <div class="daraz-product-price">৳{{ "%.0f"|format(product.price) }}</div>
+                    <form action="{{ url_for('add_to_cart') }}" method="POST">
+                        <input type="hidden" name="product_id" value="{{ product.id }}">
+                        <input type="hidden" name="quantity" value="1">
+                        <button type="submit" class="daraz-btn-cart" style="background: #28a745;">Add to Cart</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+            
+            {% if eco_products|length == 0 %}
+            <div class="col-12 text-center py-4">
+                <p class="text-muted">No eco-friendly products available at the moment. Stay tuned!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
 <!-- Products Section -->
 <section class="daraz-section">
     <div class="container">
@@ -492,6 +546,11 @@
             <div class="daraz-product-card">
                 <div class="daraz-product-image">
                     <img src="{{ product.image or 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' }}" alt="{{ product.name }}">
+                    {% if product.is_eco_friendly %}
+                    <div class="daraz-eco-badge" title="Sustainable Choice">
+                        <i class="fas fa-leaf"></i> Eco
+                    </div>
+                    {% endif %}
                 </div>
                 <div class="daraz-product-info">
                     <h6 class="daraz-product-title">{{ product.name }}</h6>

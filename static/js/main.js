@@ -209,7 +209,10 @@ function addToCart(productId, quantity = 1, productName = 'Product', productImag
 
     fetch('/add_to_cart', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
         body: `product_id=${productId}&quantity=${quantity}`
     })
     .then(r => r.json())

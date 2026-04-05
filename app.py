@@ -17,6 +17,10 @@ import secrets
 from dotenv import load_dotenv
 from functools import wraps
 from payment_gateway import SSLCommerzGateway
+try:
+    import openai
+except ImportError:
+    openai = None
 
 load_dotenv()
 payment_gateway = SSLCommerzGateway()
@@ -33,6 +37,10 @@ class Config:
 # Initialize Flask app
 app = Flask(__name__)
 app.config.from_object(Config)
+
+# OpenAI Configuration
+if openai:
+    openai.api_key = os.environ.get('OPENAI_API_KEY')
 
 # Initialize extensions
 db = SQLAlchemy(app)
@@ -94,6 +102,8 @@ class Product(db.Model):
     brand = db.Column(db.String(100))
     seller_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     is_featured = db.Column(db.Boolean, default=False)
+    is_eco_friendly = db.Column(db.Boolean, default=False)
+    eco_description = db.Column(db.Text)
     status = db.Column(db.Enum('active', 'inactive'), default='active')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
@@ -260,6 +270,8 @@ class ProductForm(FlaskForm):
     brand = StringField('Brand')
     image = StringField('Image URL')
     is_featured = BooleanField('Featured Product')
+    is_eco_friendly = BooleanField('Eco-Friendly Product')
+    eco_description = TextAreaField('Eco Description (Why is it sustainable?)')
 
 class ReviewForm(FlaskForm):
     rating = SelectField('Rating', 
@@ -359,11 +371,15 @@ def index():
         if seller:
             brand_seller_ids[brand_name] = seller.id
             
+    # Get eco-friendly products for Green Choice spotlight (newest first)
+    eco_products = Product.query.filter_by(is_eco_friendly=True, status='active').order_by(Product.id.desc()).limit(4).all()
+    
     return render_template('index.html', 
                           products=products, 
                           categories=categories, 
                           flash_deals=flash_deals,
-                          brand_seller_ids=brand_seller_ids)
+                          brand_seller_ids=brand_seller_ids,
+                          eco_products=eco_products)
 
 @app.route('/shop')
 def shop():
@@ -371,11 +387,17 @@ def shop():
     category_id = request.args.get('category', type=int)
     brand = request.args.get('brand', '')
     search = request.args.get('search', '')
+    # Handle both '1' (from links) and 'on' (from checkbox form submission)
+    eco_friendly_raw = request.args.get('eco_friendly', '')
+    eco_friendly = bool(eco_friendly_raw and eco_friendly_raw not in ('0', 'false', ''))
     sort = request.args.get('sort', 'name')
     min_price = request.args.get('min_price', type=float)
     max_price = request.args.get('max_price', type=float)
     
     query = Product.query.filter_by(status='active')
+    
+    if eco_friendly:
+        query = query.filter_by(is_eco_friendly=True)
     
     if category_id:
         query = query.filter_by(category_id=category_id)
@@ -409,7 +431,7 @@ def shop():
     
     return render_template('shop.html', products=products, categories=categories, brands=brands,
                          category_id=category_id, brand=brand, search=search, sort=sort,
-                         min_price=min_price, max_price=max_price)
+                         min_price=min_price, max_price=max_price, eco_friendly=eco_friendly)
 
 
 
@@ -576,6 +598,9 @@ def seller_add_product():
             stock=form.stock.data,
             brand=form.brand.data,
             image=form.image.data,
+            is_featured=form.is_featured.data,
+            is_eco_friendly=form.is_eco_friendly.data,
+            eco_description=form.eco_description.data,
             seller_id=current_user.id,
             status='active'
         )
@@ -607,6 +632,9 @@ def seller_edit_product(id):
         product.stock = form.stock.data
         product.brand = form.brand.data
         product.image = form.image.data
+        product.is_featured = form.is_featured.data
+        product.is_eco_friendly = form.is_eco_friendly.data
+        product.eco_description = form.eco_description.data
         
         db.session.commit()
         flash('Product updated successfully!', 'success')
@@ -725,6 +753,214 @@ def inject_unread_messages_count():
         return dict(unread_messages_count=count)
     return dict(unread_messages_count=0)
 
+@app.route('/api/assistant', methods=['POST'])
+def assistant():
+    import json as _json
+    data = request.json
+    user_query = data.get('query', '').strip()
+    history = data.get('history', [])
+
+    if not user_query:
+        return jsonify({'response': "I didn't catch that. How can I help you today? 😊"})
+
+    q = user_query.lower()
+
+    # ── SMART INTENT-BASED FALLBACK (works without OpenAI) ──────────────────
+    def smart_fallback(query):
+        q = query.lower()
+
+        # ── Greeting / Hello ────────────────────────────────────────────────
+        if any(w in q for w in ['hello', 'hi', 'hey', 'salam', 'assalam', 'good morning', 'good afternoon', 'good evening', 'how are you']):
+            return {
+                'response': "Hello! 👋 I'm your **Lifestyle Mart Shopping Assistant**. I can help you:\n\n• 🌿 Find eco-friendly products\n• 👟 Search for specific items\n• 📦 Track your orders\n• 📋 Answer store policy questions\n\nWhat can I help you with today?",
+                'products': []
+            }
+
+        # ── Return / Refund Policy ───────────────────────────────────────────
+        if any(w in q for w in ['return', 'refund', 'exchange', 'send back', 'money back', 'policy']):
+            return {
+                'response': "♻️ **Our Return & Refund Policy:**\n\n✅ **7-Day Free Returns** on most items\n✅ Items must be unused and in original packaging\n✅ Refunds are processed within **3–5 business days**\n✅ Exchange available for size/colour issues\n\n❌ Non-returnable items: Innerwear, perishables, and custom orders.\n\nTo initiate a return, go to **My Orders** → Select Order → Request Return.",
+                'products': []
+            }
+
+        # ── Delivery / Shipping ──────────────────────────────────────────────
+        if any(w in q for w in ['delivery', 'shipping', 'ship', 'how long', 'arrive', 'dispatch', 'courier', 'express', 'fast deliver']):
+            return {
+                'response': "🚚 **Delivery Information:**\n\n📦 **Standard Delivery** — 3–5 business days\n⚡ **Express Delivery** — 1–2 business days (+৳100)\n🎁 **Free Shipping** on orders over ৳5,000\n\n**Courier Partners:** Pathao, RedX, Steadfast, eCourier\n\nYou can track your order anytime using the **Track Order** link at the top of the page! 📍",
+                'products': []
+            }
+
+        # ── Payment Methods ──────────────────────────────────────────────────
+        if any(w in q for w in ['payment', 'pay', 'bkash', 'nagad', 'card', 'cash', 'cod', 'online pay', 'method', 'how to pay']):
+            return {
+                'response': "💳 **We accept the following payment methods:**\n\n💵 **Cash on Delivery (COD)** — Pay when delivered\n📱 **bKash** — Mobile banking\n📱 **Nagad** — Mobile banking\n💳 **Credit/Debit Card** — Visa, Mastercard, Amex\n🎁 **Gift Cards** — Lifestyle Mart gift cards\n\nAll online transactions are **100% secure** and encrypted. 🔒",
+                'products': []
+            }
+
+        # ── Gift Cards ───────────────────────────────────────────────────────
+        if any(w in q for w in ['gift card', 'gift', 'voucher', 'coupon', 'promo', 'discount code', 'redeem']):
+            return {
+                'response': "🎁 **Gift Cards & Promo Codes:**\n\n🎄 You can **purchase Gift Cards** from your profile page and send them to anyone via email.\n\n💰 To **apply a promo code**: Add items to your cart → Enter code at checkout → Discount is applied automatically!\n\n🌟 **Current Offer:** Use code **LIFESTYLE50** for **50% off** select BD Brand products!",
+                'products': []
+            }
+
+        # ── Order Tracking ───────────────────────────────────────────────────
+        if any(w in q for w in ['track', 'where is my order', 'my order', 'order status', 'package', 'parcel']):
+            return {
+                'response': "📍 **Order Tracking:**\n\nYou can track your order in **2 ways:**\n\n1️⃣ Click **\"Track Order\"** in the top navigation bar and enter your order number.\n2️⃣ Go to **My Account → My Orders** and click on any order to see its live status.\n\n📞 Need help? Call our hotline: **16263** (Sat–Thu, 10AM–10PM)",
+                'products': []
+            }
+
+        # ── Eco-friendly / Sustainable ───────────────────────────────────────
+        if any(w in q for w in ['eco', 'green', 'sustainable', 'environment', 'natural', 'organic', 'bamboo', 'jute', 'biodegradable', 'planet']):
+            eco_products = Product.query.filter_by(is_eco_friendly=True, status='active').limit(4).all()
+            product_list = [{
+                'id': p.id, 'name': p.name,
+                'price': f'৳{p.price:.0f}', 'image': p.image,
+                'url': url_for('product_detail', id=p.id)
+            } for p in eco_products]
+            msg = ("🌿 **Green Choice Collection — Our Eco-Friendly Products:**\n\n"
+                   "We're committed to sustainability! Here are products that are ethically sourced and environmentally friendly. "
+                   "Each carries our **🌱 Eco Badge** of approval.\n\n"
+                   "➡️ [View all eco-friendly products](/shop?eco_friendly=1)")
+            if not eco_products:
+                msg = "🌿 We're expanding our eco-friendly range! Check back soon for sustainably sourced products."
+            return {'response': msg, 'products': product_list}
+
+        # ── Shoes / Footwear ─────────────────────────────────────────────────
+        if any(w in q for w in ['shoe', 'shoes', 'footwear', 'sneaker', 'sandal', 'loafer', 'boot', 'heels', 'oxford', 'slipper']):
+            products = Product.query.filter(
+                db.or_(Product.name.ilike('%shoe%'), Product.name.ilike('%sneaker%'),
+                       Product.name.ilike('%footwear%'), Product.name.ilike('%oxford%'),
+                       Product.name.ilike('%sandal%'), Product.name.ilike('%boot%'),
+                       Product.category.has(name='Shoes'))
+            ).filter_by(status='active').limit(4).all()
+            product_list = [{'id': p.id, 'name': p.name, 'price': f'৳{p.price:.0f}', 'image': p.image, 'url': url_for('product_detail', id=p.id)} for p in products]
+            msg = "👟 **Footwear Collection:**\n\nHere are some great shoes from our collection!" if products else "👟 We have a great footwear collection! Try searching the shop for 'shoes' to see all options."
+            return {'response': msg, 'products': product_list}
+
+        # ── Seller / Sell on Platform ────────────────────────────────────────
+        if any(w in q for w in ['sell', 'seller', 'vendor', 'become seller', 'my shop', 'open shop']):
+            return {
+                'response': "🏪 **Sell on Lifestyle Mart:**\n\nBecome a seller and reach thousands of customers!\n\n✅ Easy product listing\n✅ Manage orders from your dashboard\n✅ Integrated payment collection\n\n👉 Click **\"Sell on Lifestyle Mart\"** at the top of the page to get started!",
+                'products': []
+            }
+
+        # ── Contact / Support ────────────────────────────────────────────────
+        if any(w in q for w in ['contact', 'support', 'help', 'phone', 'hotline', 'email', 'call', 'complaint']):
+            return {
+                'response': "📞 **Contact & Support:**\n\n📱 **Hotline:** 16263 (Sat–Thu, 10AM–10PM)\n📧 **Email:** support@lifestylemart.bd\n📍 **Address:** 123 Fashion Street, Dhanmondi, Dhaka-1205\n\nYou can also **message any seller directly** from a product page using the 💬 Message button!",
+                'products': []
+            }
+
+        # ── Generic Product Search ───────────────────────────────────────────
+        stop_words = {'i', 'want', 'need', 'buy', 'find', 'show', 'me', 'some', 'a', 'an', 'the', 'please', 'can', 'you', 'get', 'looking', 'for', 'suggest', 'recommend'}
+        search_terms = [w for w in q.split() if w not in stop_words and len(w) > 2]
+
+        if search_terms:
+            products = Product.query.filter(
+                db.or_(
+                    *[Product.name.ilike(f'%{t}%') for t in search_terms],
+                    *[Product.description.ilike(f'%{t}%') for t in search_terms],
+                    *[Product.brand.ilike(f'%{t}%') for t in search_terms]
+                )
+            ).filter_by(status='active').limit(4).all()
+
+            if products:
+                product_list = [{'id': p.id, 'name': p.name, 'price': f'৳{p.price:.0f}', 'image': p.image, 'url': url_for('product_detail', id=p.id)} for p in products]
+                return {'response': f"🛍️ Here are some products matching **\"{user_query}\"**:", 'products': product_list}
+
+        # ── No match ─────────────────────────────────────────────────────────
+        return {
+            'response': ("🤖 I'm not sure about that, but I can help you with:\n\n"
+                         "• 🌿 **Eco-friendly products** — ask \"show eco products\"\n"
+                         "• 👟 **Finding items** — ask \"find shoes\" or any product\n"
+                         "• 📦 **Order tracking** — ask \"track my order\"\n"
+                         "• 📋 **Policies** — ask \"return policy\" or \"delivery times\"\n"
+                         "• 💳 **Payments** — ask \"payment methods\"\n\n"
+                         "What can I help you with? 😊"),
+            'products': []
+        }
+    # ── END SMART FALLBACK ───────────────────────────────────────────────────
+
+    # Try OpenAI if configured; otherwise use smart fallback
+    if not openai or not openai.api_key:
+        result = smart_fallback(user_query)
+        return jsonify(result)
+
+    try:
+        # Get all active products to provide context to AI
+        available_products = Product.query.filter_by(status='active').limit(30).all()
+        product_context = "\n".join([f"- {p.name} (Price: ৳{p.price}, Eco-friendly: {'Yes' if p.is_eco_friendly else 'No'})" for p in available_products])
+
+        system_prompt = f"""You are the friendly and helpful Lifestyle Mart Shopping Assistant.
+        Your goal is to help users find products, answer questions, and provide excellent customer service.
+
+        Store Policies & Info:
+        - Free shipping on orders over ৳5000.
+        - Delivery time: Standard is 3-5 days, Express is 1-2 days (+৳100).
+        - Return policy: 7 days free returns for most items.
+        - Payment options: Cash on Delivery, bKash, Nagad, Credit/Debit cards, Gift Cards.
+        - Promo code: LIFESTYLE50 for 50% off select BD Brand products.
+        - For order tracking, direct users to the 'Track Order' link in the top navigation.
+
+        Available Products Context:
+        {product_context}
+
+        Based on the user's request and previous messages, provide a helpful and conversational response.
+        If the user asks for "eco-friendly" or "sustainable", explicitly prioritize products marked as Eco-friendly.
+        Identify up to 3 most relevant product names from the list if applicable to their query.
+
+        Respond ONLY in valid JSON format exactly as follows, with no extra markdown or text outside the JSON:
+        {{
+            "message": "A friendly, conversational response to the user. Keep it concise but helpful.",
+            "suggested_product_names": ["Name 1", "Name 2"]
+        }}"""
+
+        messages = [{"role": "system", "content": system_prompt}]
+
+        # Add limited history (last 4 messages) to maintain context without overloading tokens
+        for msg in history[-4:]:
+            messages.append({"role": msg['role'], "content": msg['content']})
+
+        messages.append({"role": "user", "content": user_query})
+
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=messages,
+            temperature=0.7
+        )
+
+        raw_message = response.choices[0].message.content.strip()
+        # Clean up potential markdown formatting that OpenAI sometimes adds
+        if raw_message.startswith("```json"):
+            raw_message = raw_message[7:]
+        if raw_message.endswith("```"):
+            raw_message = raw_message[:-3]
+
+        ai_response = _json.loads(raw_message.strip())
+
+        suggested_names = ai_response.get('suggested_product_names', [])
+        found_products = Product.query.filter(Product.name.in_(suggested_names)).all()
+
+        product_list = [{
+            'id': p.id, 'name': p.name,
+            'price': f'৳{p.price:.0f}', 'image': p.image,
+            'url': url_for('product_detail', id=p.id)
+        } for p in found_products]
+
+        return jsonify({
+            'response': ai_response.get('message'),
+            'products': product_list
+        })
+
+    except Exception as e:
+        print(f"OpenAI Error: {e} — falling back to smart fallback")
+        result = smart_fallback(user_query)
+        return jsonify(result)
+
+
+
 @app.route('/about')
 def about():
     return render_template('about.html')
@@ -785,11 +1021,27 @@ def add_to_cart():
     cart[product_id] = cart.get(product_id, 0) + quantity
     session['cart'] = cart
     
-    return jsonify({
-        'success': True, 
-        'message': 'Product added to cart',
-        'cart_count': sum(cart.values())
-    })
+    cart_count = sum(cart.values())
+    
+    # Return JSON for AJAX/fetch requests (main.js sends X-Requested-With header)
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({
+            'success': True, 
+            'message': f'{product.name} added to cart!',
+            'cart_count': cart_count
+        })
+    
+    # Regular form submissions (non-JS fallback)
+    flash(f'{product.name} added to cart!', 'success')
+    return redirect(request.referrer or url_for('index'))
+
+@app.route('/cart_count')
+def cart_count_api():
+    """Return the current cart item count as JSON for the header badge."""
+    cart = session.get('cart', {})
+    count = sum(cart.values())
+    return jsonify({'count': count})
+
 
 @app.route('/update_cart', methods=['POST'])
 def update_cart():

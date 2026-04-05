@@ -215,7 +215,9 @@ def create_sample_data():
                 'stock': 40,
                 'brand': 'Aarong',
                 'image': 'https://images.unsplash.com/photo-1708534246055-d7b149acb731?q=80&w=800&auto=format&fit=crop',
-                'is_featured': True
+                'is_featured': True,
+                'is_eco_friendly': True,
+                'eco_description': 'Made from 100% natural organic cotton, supporting local artisans and sustainable fashion.'
             },
             {
                 'name': 'Women\'s Palazzo Pants',
@@ -524,6 +526,32 @@ def create_sample_data():
                 'brand': 'Sleep Well',
                 'image': 'https://images.unsplash.com/photo-1631679706909-1844bbd07221?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
                 'is_featured': True
+            },
+            
+            # Eco-Friendly Uniques (Category 6 - Home & Living or 4 - Accessories)
+            {
+                'name': 'Sustainable Jute Tote Bag',
+                'description': 'A beautiful, handcrafted tote bag made from 100% natural jute fiber. Durable, biodegradable, and perfect for eco-conscious shopping.',
+                'category_id': 4,
+                'price': 850,
+                'stock': 100,
+                'brand': 'EcoCraft',
+                'image': 'https://images.unsplash.com/photo-1544816153-12ad5d714401?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+                'is_featured': True,
+                'is_eco_friendly': True,
+                'eco_description': 'Handcrafted from 100% biodegradable jute fiber. Supports rural women artisans.'
+            },
+            {
+                'name': 'Natural Bamboo Water Bottle',
+                'description': 'Stay hydrated with this stylish bamboo water bottle. Features a high-quality stainless steel interior and a genuine bamboo exterior.',
+                'category_id': 6,
+                'price': 1200,
+                'stock': 50,
+                'brand': 'GreenLife',
+                'image': 'https://images.unsplash.com/photo-1602143352538-ff39385033a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+                'is_featured': True,
+                'is_eco_friendly': True,
+                'eco_description': 'Plastic-free construction using renewable bamboo and recyclable stainless steel.'
             },
         ]
         
