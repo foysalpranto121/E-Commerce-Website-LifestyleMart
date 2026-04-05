@@ -102,7 +102,7 @@ def create_sample_data():
                 'price': 1500,
                 'stock': 50,
                 'brand': 'Yellow',
-                'image': 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+                'image': 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?auto=format&fit=crop&q=80&w=800',
                 'is_featured': True
             },
             {
@@ -112,7 +112,7 @@ def create_sample_data():
                 'price': 2500,
                 'stock': 30,
                 'brand': 'Denim Co',
-                'image': 'https://images.unsplash.com/photo-1542272604-787c3839105e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+                'image': 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&q=80&w=800',
                 'is_featured': True
             },
             {
@@ -132,7 +132,7 @@ def create_sample_data():
                 'price': 1500,
                 'stock': 40,
                 'brand': 'Polo Classic',
-                'image': 'https://images.unsplash.com/photo-1625910513413-5fcce0684e31?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+                'image': 'https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?auto=format&fit=crop&w=800&q=80',
                 'is_featured': False
             },
             {
@@ -246,7 +246,7 @@ def create_sample_data():
                 'price': 4500,
                 'stock': 20,
                 'brand': 'Ethnic Elegance',
-                'image': 'https://images.unsplash.com/photo-1610030464501-7b1774f7aa86?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+                'image': 'https://images.unsplash.com/photo-1610034444533-34903332000d?auto=format&fit=crop&q=80&w=800',
                 'is_featured': True
             },
             {
@@ -278,7 +278,7 @@ def create_sample_data():
                 'price': 2000,
                 'stock': 50,
                 'brand': 'Urban Step',
-                'image': 'https://images.unsplash.com/photo-1560769629-975f1d23c57d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+                'image': 'https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?auto=format&fit=crop&w=800&q=80',
                 'is_featured': False
             },
             {
@@ -330,7 +330,7 @@ def create_sample_data():
                 'price': 4200,
                 'stock': 20,
                 'brand': 'Chic Style',
-                'image': 'https://images.unsplash.com/photo-1594938298603-d91aecb6caea?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+                'image': 'https://images.unsplash.com/photo-1590156221122-c748e7898b0a?auto=format&fit=crop&w=800&q=80',
                 'is_featured': True
             },
             {
@@ -422,7 +422,7 @@ def create_sample_data():
                 'price': 650,
                 'stock': 100,
                 'brand': 'Hair Care Pro',
-                'image': 'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+                'image': 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=800&q=80',
                 'is_featured': False
             },
             {
@@ -442,7 +442,7 @@ def create_sample_data():
                 'price': 550,
                 'stock': 85,
                 'brand': 'Skin Care',
-                'image': 'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+                'image': 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=800&q=80',
                 'is_featured': False
             },
             {
@@ -462,7 +462,7 @@ def create_sample_data():
                 'price': 450,
                 'stock': 90,
                 'brand': 'Herbal Care',
-                'image': 'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+                'image': 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=800&q=80',
                 'is_featured': False
             },
             
@@ -474,7 +474,7 @@ def create_sample_data():
                 'price': 750,
                 'stock': 50,
                 'brand': 'Home Comfort',
-                'image': 'https://images.unsplash.com/photo-1584100936595-c0654b55a2e6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+                'image': 'https://images.unsplash.com/photo-1567016432779-094069958ea5?auto=format&fit=crop&q=80&w=800',
                 'is_featured': True
             },
             {
@@ -494,7 +494,7 @@ def create_sample_data():
                 'price': 1200,
                 'stock': 30,
                 'brand': 'Art Decor',
-                'image': 'https://images.unsplash.com/photo-1513519245088-0e12902e35ca?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+                'image': 'https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?auto=format&fit=crop&w=800&q=80',
                 'is_featured': True
             },
             {
