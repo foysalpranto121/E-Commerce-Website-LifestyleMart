@@ -6,8 +6,8 @@ def fix_product_images():
         updates = {
             "Yellow Men's Polo Shirt": "https://images.unsplash.com/photo-1581655353564-df123a1eb820?auto=format&fit=crop&q=80&w=800",
             "Classic Denim Jeans": "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&q=80&w=800",
-            "Women's Saree": "https://images.unsplash.com/photo-1610034444533-34903332000d?auto=format&fit=crop&q=80&w=800",
-            "Leather Handbag": "https://images.unsplash.com/photo-1590156221122-c748e7898b0a?auto=format&fit=crop&w=800&q=80",
+            "Women's Saree": "/static/uploads/womens_saree.png",
+            "Leather Handbag": "/static/uploads/leather_handbag.png",
             "Decorative Cushion": "https://images.unsplash.com/photo-1567016432779-094069958ea5?auto=format&fit=crop&q=80&w=800",
             "Wall Art": "https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?auto=format&fit=crop&w=800&q=80"
         }
