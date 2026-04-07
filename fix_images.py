@@ -9,7 +9,9 @@ def fix_product_images():
             "Women's Saree": "/static/uploads/womens_saree.png",
             "Leather Handbag": "/static/uploads/leather_handbag.png",
             "Decorative Cushion": "https://images.unsplash.com/photo-1567016432779-094069958ea5?auto=format&fit=crop&q=80&w=800",
-            "Wall Art": "https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?auto=format&fit=crop&w=800&q=80"
+            "Wall Art": "https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?auto=format&fit=crop&w=800&q=80",
+            "Hair Oil": "/static/uploads/hair_oil.png",
+            "Body Lotion": "/static/uploads/body_lotion.png"
         }
         
         for name, url in updates.items():
