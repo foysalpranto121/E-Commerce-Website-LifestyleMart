@@ -442,7 +442,7 @@ def create_sample_data():
                 'price': 550,
                 'stock': 85,
                 'brand': 'Skin Care',
-                'image': 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=800&q=80',
+                'image': '/static/uploads/body_lotion.png',
                 'is_featured': False
             },
             {
@@ -462,7 +462,7 @@ def create_sample_data():
                 'price': 450,
                 'stock': 90,
                 'brand': 'Herbal Care',
-                'image': 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=800&q=80',
+                'image': '/static/uploads/hair_oil.png',
                 'is_featured': False
             },
             
