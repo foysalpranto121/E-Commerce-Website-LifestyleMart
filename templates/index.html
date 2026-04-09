@@ -253,9 +253,10 @@
             <a href="{{ url_for('shop') }}" class="daraz-view-all">View All</a>
         </div>
         <div class="daraz-flash-grid">
+            {% set fd_count = namespace(value=0) %}
             {% for deal in flash_deals %}
             <div class="daraz-flash-card">
-                <a href="{{ url_for('product_detail', id=deal.product.id) }}">
+                <a href="{{ url_for('product_detail', id=deal.product.id) }}" style="text-decoration: none; color: inherit;">
                     <img src="{{ deal.product.image }}" alt="{{ deal.product.name }}" loading="lazy">
                     <h6>{{ deal.product.name }}</h6>
                     <span class="daraz-original-price">৳{{ "%.0f"|format(deal.original_price) }}</span>
@@ -263,7 +264,10 @@
                     <div class="daraz-discount-badge">-{{ deal.discount_percent }}%</div>
                 </a>
             </div>
-            {% else %}
+            {% set fd_count.value = fd_count.value + 1 %}
+            {% endfor %}
+
+            {% if fd_count.value < 1 %}
             <div class="daraz-flash-card">
                 <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Premium Cotton T-Shirt">
                 <h6>Premium Cotton T-Shirt</h6>
@@ -271,6 +275,10 @@
                 <div class="daraz-discount-price">৳840</div>
                 <div class="daraz-discount-badge">-30%</div>
             </div>
+            {% set fd_count.value = fd_count.value + 1 %}
+            {% endif %}
+
+            {% if fd_count.value < 2 %}
             <div class="daraz-flash-card">
                 <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Red Running Shoes">
                 <h6>Red Running Shoes</h6>
@@ -278,6 +286,10 @@
                 <div class="daraz-discount-price">৳2,800</div>
                 <div class="daraz-discount-badge">-20%</div>
             </div>
+            {% set fd_count.value = fd_count.value + 1 %}
+            {% endif %}
+
+            {% if fd_count.value < 3 %}
             <div class="daraz-flash-card">
                 <img src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Leather Handbag">
                 <h6>Leather Handbag</h6>
@@ -285,14 +297,8 @@
                 <div class="daraz-discount-price">৳3,150</div>
                 <div class="daraz-discount-badge">-25%</div>
             </div>
-            <div class="daraz-flash-card">
-                <img src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Women's Heels">
-                <h6>Women's Heels</h6>
-                <span class="daraz-original-price">৳2,800</span>
-                <div class="daraz-discount-price">৳1,820</div>
-                <div class="daraz-discount-badge">-35%</div>
-            </div>
-            {% endfor %}
+            {% set fd_count.value = fd_count.value + 1 %}
+            {% endif %}
         </div>
     </div>
 </section>
