@@ -138,7 +138,6 @@ python app.py
 - **Password:** password123
 
 ## 📁 Project Structure
-
 ```
 lifestyle-mart-python/
 ├── app.py                  # Main Flask application
