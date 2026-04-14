@@ -1,4 +1,4 @@
-"""
+        """
 Database setup script for LIFESTYLE MART Python eCommerce Platform
 """
 
@@ -76,7 +76,6 @@ def create_sample_data():
             db.session.add(s)
         
         db.session.commit()
-        
         # Create sample categories
         categories = [
             Category(name='Men\'s Fashion', description='Trendy clothing and accessories for men'),
